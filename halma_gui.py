@@ -5,6 +5,7 @@ To do :
     - Integrate HalmaModel
         - Multithreading/multiprocessing for continous timer
     - Move history
+        - Selected AI move (current: first available move list)
     - Working 'START' and 'RESET' button
     - Tkinter integration for game start configuration
     - Customization (menu screen)
@@ -55,6 +56,7 @@ class gui:
     timer_time = 0
     timer_stack = 0
     move_timer = 0
+    move_history = []
 
     # Font and object variable
     font_time = 0
@@ -117,6 +119,7 @@ class gui:
         self.font_time_stack    = pygame.font.SysFont('Coolvetica', 60)
         self.font_player_name   = pygame.font.SysFont('Coolvetica', 100)
         self.font_fps           = pygame.font.SysFont('Coolvetica', 28)
+        self.font_move_history  = pygame.font.SysFont('Coolvetica', 40)
     
     # Template Load
     def load_template(self, numbered=None):
@@ -230,6 +233,19 @@ class gui:
         elif p == 1:
             self.screen.blit(self.font_player_name.render(player.nama,1,(colors['P2'])), (210,195))
 
+    def update_history(self):
+        n = 4   # History size
+        for i in range(0,len(self.move_history)):
+            name = self.model.getPemain(self.move_history[i][0]).nama
+            if self.move_history[i][3] == self.model.A_GESER:
+                move_type = 'GESER'
+            elif self.move_history[i][3] == self.model.A_LONCAT:
+                move_type = 'LONCAT'
+            # Player 1 move
+            if self.move_history[i][0] == 0:
+                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({}s)'.format(name, move_type, self.move_history[i][1], self.move_history[i][2], self.move_history[i][4]),1,(colors['P1'])), (35, 510+40*i))
+            elif self.move_history[i][0] == 1:
+                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({}s)'.format(name, move_type, self.move_history[i][1], self.move_history[i][2], self.move_history[i][4]),1,(colors['P2'])), (35, 510+40*i))
     # Update all screen element
     def update_screen(self):
         print('[update_screen loop]')
@@ -239,6 +255,7 @@ class gui:
         self.update_timer()
         self.update_timer_stack()
         self.update_fps()
+        self.update_history()
         pygame.display.update()
 
     def action_move(self,selesai):
@@ -260,9 +277,12 @@ class gui:
             valid = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
 
     def main(self):
+        # Starting condition
         self.reset_timer()
         self.update_screen()
         modelState = self.model.S_OK
+
+        # Game loop (1 round)
         while self.runningState and modelState == self.model.S_OK:
             # Frame and loop timing
             self.clock.tick_busy_loop(75)
@@ -274,6 +294,14 @@ class gui:
             p = self.model.getPemain(self.model.getGiliran())   # get current pemain ?
             final_pos, initial_pos, action = p.main(self.model)
             selesai = self.model.getWaktu()
+            time_exec = self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu()
+
+            # Insert to move history (4 last move)
+            self.move_history.append([self.model.getGiliran(), initial_pos, final_pos[0], action, time_exec])
+            if len(self.move_history) > 4:
+                self.move_history = self.move_history[-4:]
+            print('[move] {} {} {}'.format(initial_pos, final_pos[0], action))
+            print('[exec time] {}'.format(time_exec))
             
             # Type of action
             if action == self.model.A_LONCAT:
