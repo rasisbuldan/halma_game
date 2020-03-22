@@ -57,23 +57,31 @@ class HalmaPlayer:
         a = 0
 
         # Dummy algorithm to simulate time
-        for i in range(0,30000000):
+        for i in range(0,1000000):
             a += i
         
         papan = model.getPapan()        
         b0 = model.getPosisiBidak(self.index)
-        for b in b0:
+        # Randomize choice
+        seed1 = random.sample(range(10,1000), 20)
+        random.seed(random.choice(seed1))
+        l = []
+        g = []
+        while l == [] or g == []:
+            b = random.choice(b0)
             g,l = self.bisaMain(model, papan, b[0], b[1])
-            # print("Geser : ", g)
-            # print("Loncat: ", l)
-            if l != [] :
-                print('algorithm time: ', time.process_time()-time_mulai)
-                return [l[0]], b, model.A_LONCAT
-            if g != [] :
-                print('algorithm time: ', time.process_time()-time_mulai)
-                return g, b, model.A_GESER
+        
+        if l != [] :
+            print('algorithm time: ', time.process_time()-time_mulai)
+            return [l[0]], b, model.A_LONCAT
+
+        if g != [] :
+            print('algorithm time: ', time.process_time()-time_mulai)
+            return g, b, model.A_GESER
+        
         print('algorithm time: ', time.process_time()-time_mulai)
-        return None, None, model.A_HENTI
+        print('HENTI')
+        return None, None, model.A_BERHENTI
     
             
         
