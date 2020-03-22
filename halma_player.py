@@ -55,8 +55,11 @@ class HalmaPlayer:
     def main(self, model):
         time_mulai = time.process_time()
         a = 0
+
+        # Dummy algorithm to simulate time
         for i in range(0,30000000):
             a += i
+        
         papan = model.getPapan()        
         b0 = model.getPosisiBidak(self.index)
         for b in b0:

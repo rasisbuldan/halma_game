@@ -4,8 +4,7 @@ Halma GUI (Using halma_model script)
 To do :
     - Integrate HalmaModel
         - Multithreading/multiprocessing for continous timer
-    - Halma icon
-    - Player and timer color
+    - Move history
     - Working 'START' and 'RESET' button
     - Tkinter integration for game start configuration
     - Customization (menu screen)
@@ -13,6 +12,7 @@ To do :
     - 4 player (team)
     - Human player
     - Change to 60fps on commit
+    - Package installer (?)
 '''
 
 import pygame
@@ -26,7 +26,9 @@ colors = {
     'BLACK': (0,0,0),
     'WHITE': (255,255,255),
     'BG': (236,243,244),
-    'TEXT': (40,76,81)
+    'TEXT': (40,76,81),
+    'P1': (240,111,82),
+    'P2': (87,184,77)
 }
 
 # GUI Class
@@ -76,6 +78,7 @@ class gui:
         # Pygame library and variable initialization
         pygame.init()
         self.screen = pygame.display.set_mode((1280,720))    # Resolution set
+        pygame.display.set_icon(pygame.image.load('assets/icon.png'))
         pygame.display.set_caption('Halma (pre-alpha) v0.1')
         self.runningState = True
         self.n_board = n_board
@@ -95,19 +98,19 @@ class gui:
         self.clock = pygame.time.Clock()
 
         # Assets Import
-        self.title = pygame.image.load('halma/assets/title.png')
-        self.info_text = [pygame.image.load('halma/assets/info_turn.png'), pygame.image.load('halma/assets/info_score.png'), pygame.image.load('halma/assets/info_time.png'), pygame.image.load('halma/assets/info_history.png')]
-        self.button = [pygame.image.load('halma/assets/button_start.png'), pygame.image.load('halma/assets/button_reset.png')]
-        self.board_8 = [pygame.image.load('halma/assets/board/board_8.png'), pygame.image.load('halma/assets/board/board_8_numbered.png')]
-        self.board_10 = [pygame.image.load('halma/assets/board/board_10.png'), pygame.image.load('halma/assets/board/board_10_numbered.png')]
+        self.title = pygame.image.load('assets/title.png')
+        self.info_text = [pygame.image.load('assets/info_turn.png'), pygame.image.load('assets/info_score.png'), pygame.image.load('assets/info_time.png'), pygame.image.load('assets/info_history.png')]
+        self.button = [pygame.image.load('assets/button_start.png'), pygame.image.load('assets/button_reset.png')]
+        self.board_8 = [pygame.image.load('assets/board/board_8.png'), pygame.image.load('assets/board/board_8_numbered.png')]
+        self.board_10 = [pygame.image.load('assets/board/board_10.png'), pygame.image.load('assets/board/board_10_numbered.png')]
         
         # Pieces Import
         for i in range(1,11):
-            self.p_8[1].append(pygame.image.load('halma/assets/pieces/8x8/' + str(100+i) + '.png'))
-            self.p_8[2].append(pygame.image.load('halma/assets/pieces/8x8/' + str(200+i) + '.png'))
+            self.p_8[1].append(pygame.image.load('assets/pieces/8x8/' + str(100+i) + '.png'))
+            self.p_8[2].append(pygame.image.load('assets/pieces/8x8/' + str(200+i) + '.png'))
         for i in range(1,16):
-            self.p_10[1].append(pygame.image.load('halma/assets/pieces/10x10/' + str(100+i) + '.png'))
-            self.p_10[2].append(pygame.image.load('halma/assets/pieces/10x10/' + str(200+i) + '.png'))
+            self.p_10[1].append(pygame.image.load('assets/pieces/10x10/' + str(100+i) + '.png'))
+            self.p_10[2].append(pygame.image.load('assets/pieces/10x10/' + str(200+i) + '.png'))
 
         # Font import
         self.font_time          = pygame.font.SysFont('Coolvetica', 120)
@@ -209,15 +212,23 @@ class gui:
     
     # Reserve time left (accumulative bonus time from previous move)
     def update_timer_stack(self):
-        stack = self.model.getJatahWaktu(self.model.getGiliran())
-        self.screen.blit(self.font_time_stack.render('({0:.2f})'.format(stack),1,(colors['TEXT'])), (400,360))
+        p = self.model.getGiliran()
+        stack = self.model.getJatahWaktu(p)
+        if p == 0:
+            self.screen.blit(self.font_time_stack.render('({0:.2f})'.format(stack),1,(colors['P1'])), (400,360))
+        elif p == 1:
+            self.screen.blit(self.font_time_stack.render('({0:.2f})'.format(stack),1,(colors['P2'])), (400,360))
 
     def update_fps(self):
         self.screen.blit(self.font_fps.render('FPS: {0:.1f}'.format(self.clock.get_fps()),1,(colors['TEXT'])), (1180,690))
 
     def update_player(self):
-        p = self.model.getPemain(self.model.getGiliran())
-        self.screen.blit(self.font_player_name.render(p.nama,1,(colors['TEXT'])), (210,195))
+        p = self.model.getGiliran()
+        player = self.model.getPemain(p)
+        if p == 0:
+            self.screen.blit(self.font_player_name.render(player.nama,1,(colors['P1'])), (210,195))
+        elif p == 1:
+            self.screen.blit(self.font_player_name.render(player.nama,1,(colors['P2'])), (210,195))
 
     # Update all screen element
     def update_screen(self):
