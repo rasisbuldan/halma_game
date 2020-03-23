@@ -31,6 +31,7 @@ colors = {
     'BLACK': (0,0,0),
     'WHITE': (255,255,255),
     'BG': (236,243,244),
+    'BG_DARK': (10,31,34),
     'TEXT': (40,76,81),
     'P1': (240,111,82),
     'P2': (87,184,77)
@@ -48,9 +49,13 @@ class gui:
     board_10 = []
     p_8  = [0,[0],[0]]
     p_10 = [0,[0],[0]]
-    piece = []
+    piece_8  = []
+    piece_10 = []
+    dark_mode = False
 
     # Game variable
+    p1_initial = 0
+    p2_initial = 0
     xi = 0
     model = 0
     runningState = False
@@ -66,6 +71,7 @@ class gui:
     click_start = False
     click_reset = False
     starting = True
+    shift_i = 0
 
     # Font and object variable
     font_time = 0
@@ -74,9 +80,9 @@ class gui:
     # State simulator
     # Access: self.PAPAN_10_15x2[row][col]
     PAPAN_10_15x2 = [[101, 102, 104, 107, 111, 0,   0,   0,   0,   0  ],
-                     [103, 0, 108, 112, 0,   0,   0,   0,   0,   0  ],
+                     [103, 0, 108, 112,   0,   0,   0,   0,   0,   0  ],
                      [106, 109, 113, 0,   0,   0,   0,   0,   0,   0  ],
-                     [110, 114, 0,   0,   0,   0,   105,   0,   0,   0  ],
+                     [110, 114, 0,   0,   0,   0,   105, 0,   0,   0  ],
                      [115, 0,   0,   0,   0,   0,   0,   0,   0,   0  ],
                      [0,   0,   0,   0,   0,   0,   0,   0,   0,   215],
                      [0,   0,   0,   0,   0,   0,   0,   0,   214, 210],
@@ -84,6 +90,7 @@ class gui:
                      [0,   0,   0,   0,   0,   0,   212, 208, 205, 203],
                      [0,   0,   0,   0,   0,   0,   207, 204, 202, 201]]
     
+
     # Initialization
     def __init__(self, n_board, p1, p2):
         # Pygame library and variable initialization
@@ -91,16 +98,29 @@ class gui:
         self.screen = pygame.display.set_mode((1280,720))    # Resolution set
         pygame.display.set_icon(pygame.image.load('assets/icon.png'))
         pygame.display.set_caption('Halma (pre-alpha) v0.1')
-        self.runningState = True
         self.n_board = n_board
         if self.n_board == 8:
             self.d = 75
+            self.x0 = 623
+            self.y0 = 63
         elif self.n_board == 10:
             self.d = 60
             self.x0 = 623
             self.y0 = 63
-        self.xi = 0
 
+        # Save initial player for reset function
+        self.p1_initial = p1
+        self.p2_initial = p2
+        
+        # Game state
+        self.starting = True
+        self.runningState = False
+        
+        # Utilities
+        self.xi = 0
+        self.shift_i = 0
+
+        # Game model
         self.model = HalmaModel()
         self.modelState = self.model.S_OK      # Running state
         self.model.awal(p1,p2)
@@ -109,13 +129,16 @@ class gui:
         self.clock = pygame.time.Clock()
 
         # Assets Import
-        self.title = pygame.image.load('assets/title.png')
-        self.info_text = [pygame.image.load('assets/info_turn.png'), pygame.image.load('assets/info_score.png'), pygame.image.load('assets/info_timeleft.png'), pygame.image.load('assets/info_lastmove.png')]
-        self.button = [pygame.image.load('assets/button_start.png'), pygame.image.load('assets/button_reset.png')]
-        self.button_hover = [pygame.image.load('assets/button_start_hover.png'), pygame.image.load('assets/button_reset_hover.png')]
-        self.board_8 = [pygame.image.load('assets/board/board_8.png'), pygame.image.load('assets/board/board_8_numbered.png')]
-        self.board_10 = [pygame.image.load('assets/board/board_10.png'), pygame.image.load('assets/board/board_10_numbered.png')]
-        self.piece = [0, pygame.image.load('assets/pieces_global/piece_10_1.png'), pygame.image.load('assets/pieces_global/piece_10_2.png')]
+        self.title          = [pygame.image.load('assets/title.png'), pygame.image.load('assets/title_dark.png')]
+        self.info_text      = [pygame.image.load('assets/info_turn.png'), pygame.image.load('assets/info_score.png'), pygame.image.load('assets/info_timeleft.png'), pygame.image.load('assets/info_lastmove.png')]
+        self.button         = [pygame.image.load('assets/button/button_start.png'), pygame.image.load('assets/button/button_reset.png'), pygame.image.load('assets/button/button_8x8.png'), pygame.image.load('assets/button/button_10x10.png'), pygame.image.load('assets/button/button_dark.png')]
+        self.button_active  = [pygame.image.load('assets/button/button_start_active.png'), pygame.image.load('assets/button/button_reset_active.png'), pygame.image.load('assets/button/button_8x8_active.png'), pygame.image.load('assets/button/button_10x10_active.png'), pygame.image.load('assets/button/button_dark_active.png')]
+        self.board_8        = [pygame.image.load('assets/board/board_8.png'), pygame.image.load('assets/board/board_8_numbered.png')]
+        self.board_10       = [pygame.image.load('assets/board/board_10.png'), pygame.image.load('assets/board/board_10_numbered.png')]
+        self.board_8_dark   = [pygame.image.load('assets/board/board_8_dark.png'), pygame.image.load('assets/board/board_8_numbered_dark.png')]
+        self.board_10_dark  = [pygame.image.load('assets/board/board_10_dark.png'), pygame.image.load('assets/board/board_10_numbered_dark.png')]
+        self.piece_8        = [0, pygame.image.load('assets/pieces_global/piece_8_1.png'), pygame.image.load('assets/pieces_global/piece_8_2.png')]
+        self.piece_10       = [0, pygame.image.load('assets/pieces_global/piece_10_1.png'), pygame.image.load('assets/pieces_global/piece_10_2.png')]
         
         # Pieces Import
         for i in range(1,11):
@@ -132,13 +155,24 @@ class gui:
         self.font_fps           = pygame.font.SysFont('Coolvetica', 28)
         self.font_move_history  = pygame.font.SysFont('Coolvetica', 40)
         self.font_piece         = pygame.font.SysFont('Coolvetica', 40)
+        self.font_score         = pygame.font.SysFont('Coolvetica', 110)
+        self.font_warning       = pygame.font.SysFont('Coolvetica', 34)
     
+
     # Template Load
     def load_template(self, numbered=None):
-        self.screen.fill(colors['BG'])
-        self.screen.blit(self.title, dest=(35,25))
+        if self.dark_mode:
+            self.screen.fill(colors['BG_DARK'])
+            self.screen.blit(self.title[1], dest=(35,25))
+        else:
+            self.screen.fill(colors['BG'])
+            self.screen.blit(self.title[0], dest=(35,25))
         self.screen.blit(self.button[0], dest=(35,120))
         self.screen.blit(self.button[1], dest=(190,120))
+        if self.starting:
+            self.screen.blit(self.button[2], dest=(35,230))
+            self.screen.blit(self.button[3], dest=(140,230))
+            self.screen.blit(self.button[4], dest=(35,310))
         if not self.starting:
             self.screen.blit(self.info_text[0], dest=(35,200))
             self.screen.blit(self.info_text[1], dest=(35,285))
@@ -149,19 +183,34 @@ class gui:
         if numbered == None:
             numbered = True
 
-        if self.n_board == 8:
-            if numbered:
-                self.screen.blit(self.board_8[1], dest=(582,21))
+        if self.dark_mode:
+            if self.n_board == 8:
+                if numbered:
+                    self.screen.blit(self.board_8_dark[1], dest=(582,21))
+                else:
+                    self.screen.blit(self.board_8_dark[0], dest=(610,50))
+            elif self.n_board == 10:
+                if numbered:
+                    self.screen.blit(self.board_10_dark[1], dest=(582,21))
+                else:
+                    self.screen.blit(self.board_10_dark[0], dest=(610,50))
             else:
-                self.screen.blit(self.board_8[0], dest=(610,50))
-        elif self.n_board == 10:
-            if numbered:
-                self.screen.blit(self.board_10[1], dest=(582,21))
-            else:
-                self.screen.blit(self.board_10[0], dest=(610,50))
+                print('Invalid parameter')
+                return 0
         else:
-            print('Invalid parameter')
-            return 0
+            if self.n_board == 8:
+                if numbered:
+                    self.screen.blit(self.board_8[1], dest=(582,21))
+                else:
+                    self.screen.blit(self.board_8[0], dest=(610,50))
+            elif self.n_board == 10:
+                if numbered:
+                    self.screen.blit(self.board_10[1], dest=(582,21))
+                else:
+                    self.screen.blit(self.board_10[0], dest=(610,50))
+            else:
+                print('Invalid parameter')
+                return 0
 
     # Load current state board pieces
     def load_pieces(self, board):
@@ -220,6 +269,11 @@ class gui:
         elif p == 1:
             self.screen.blit(self.font_player_name.render(player.nama,True,(colors['P2'])), dest=(210,195))
 
+    # Player score display
+    def update_score(self):
+        # Dummy score
+        self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT'])), dest=(210,280))
+
     # History display
     # Order: latest on bottom
     def update_history(self):
@@ -254,21 +308,53 @@ class gui:
 
         # Start button
         if self.in_region(mouse,35,120,126,44):
-            self.screen.blit(self.button_hover[0], dest=(35,120))
+            self.screen.blit(self.button_active[0], dest=(35,120))
             if click[0] == 1:
                 print('[click start]')
                 action_start()
 
         # Reset button
-        elif self.in_region(mouse,190,120,126,44):
-            self.screen.blit(self.button_hover[1], dest=(190,120))
+        if self.in_region(mouse,190,120,126,44):
+            self.screen.blit(self.button_active[1], dest=(190,120))
             if click[0] == 1:
                 print('[click reset]')
                 action_reset()
 
+        # 8x8 button
+        if (self.in_region(mouse,35,230,92,50) or self.n_board == 8) and self.starting:
+            self.screen.blit(self.button_active[2], dest=(35,230))
+            if click[0] == 1:
+                print('[click 8x8]')
+                self.n_board = 8
+                self.d = 75
+                self.x0 = 626
+                self.y0 = 66
+
+        # 10x10 button
+        if (self.in_region(mouse,140,230,104,50) or self.n_board == 10) and self.starting:
+            self.screen.blit(self.button_active[3], dest=(140,230))
+            if click[0] == 1:
+                print('[click 10x10]')
+                self.n_board = 10
+                self.d = 60
+                self.x0 = 623
+                self.y0 = 63
+        
+        # Dark mode button
+        if self.in_region(mouse,35,310,208,50 or self.dark_mode == True) and self.starting:
+            self.screen.blit(self.button_active[4], dest=(35,310))
+            if click[0] == 1:
+                print('[click dark]')
+                self.dark_mode = not self.dark_mode
+                time.sleep(0.2)
+                
+
     # Start button clicked
     def action_start(self):
-        self.click_start = True
+        if self.n_board == 10:
+            self.click_start = True
+        else:
+            self.screen.blit(self.font_warning.render('Currently only 10x10 board are supported',True,(colors['TEXT'])), dest=(35,290))
     
     # Reset button clicked
     def action_reset(self):
@@ -277,80 +363,88 @@ class gui:
     # Custom text piece (currently 10x10 supported)
     # Blit to index of board: row(i), column(j)
     def draw_piece(self,text,color,i,j):
-        # Draw piece
-        self.screen.blit(self.piece[color], dest=(self.x0 + j*self.d, self.y0 + i*self.d))
-
         # Create text object
         textSurface = self.font_piece.render(text, True, (colors['WHITE']))
         textRect = textSurface.get_rect()
-        textRect.center = (self.x0 + j*self.d + 27, self.y0 + i*self.d + 29)
+
+        # Draw piece
+        if self.n_board == 10:
+            self.screen.blit(self.piece_10[color], dest=(self.x0 + j*self.d, self.y0 + i*self.d))
+            textRect.center = (self.x0 + j*self.d + 27, self.y0 + i*self.d + 29)
+        elif self.n_board == 8:
+            self.screen.blit(self.piece_8[color], dest=(self.x0 + j*self.d, self.y0 + i*self.d))
+            textRect.center = (self.x0 + j*self.d + 32, self.y0 + i*self.d + 34)
+
+        # Draw text
         self.screen.blit(textSurface, textRect)
 
+    # Color shifting RGB value (for start_animation)
+    def color_shift(self,val1,val2,step,i,dir):
+        # Decreasing
+        if dir == 0:
+            return val1 - int(step*i*abs(val2-val1))
+        # Increasing
+        if dir == 1:
+            return val1 + int(step*i*abs(val2-val1))
+
+    # Animating board piece in starting state
     def start_animation(self,x):
         # Background color
         for i in range(0,self.n_board):
             for j in range(0,self.n_board):
                 self.draw_piece("",2-x,i,j)
         
+        # 10x10 board
+        if self.n_board == 10:
+            z = 0
+        elif self.n_board == 8:
+            z = 1
+
         # 'PRESS START TO PLAY' text
-        self.draw_piece('P',1+x,1,2)
-        self.draw_piece('R',1+x,1,3)
-        self.draw_piece('E',1+x,1,4)
-        self.draw_piece('S',1+x,1,5)
-        self.draw_piece('S',1+x,1,6)
+        self.draw_piece('P',1+x,1,2-z)
+        self.draw_piece('R',1+x,1,3-z)
+        self.draw_piece('E',1+x,1,4-z)
+        self.draw_piece('S',1+x,1,5-z)
+        self.draw_piece('S',1+x,1,6-z)
+        
+        self.draw_piece('S',1+x,3,3-z)
+        self.draw_piece('T',1+x,3,4-z)
+        self.draw_piece('A',1+x,3,5-z)
+        self.draw_piece('R',1+x,3,6-z)
+        self.draw_piece('T',1+x,3,7-z)
+        
+        self.draw_piece('T',1+x,5-z,2-z)
+        self.draw_piece('O',1+x,5-z,3-z)
+        
+        self.draw_piece('P',1+x,7-z,3-z)
+        self.draw_piece('L',1+x,7-z,4-z)
+        self.draw_piece('A',1+x,7-z,5-z)
+        self.draw_piece('Y',1+x,7-z,6-z)
 
-        self.draw_piece('S',1+x,3,3)
-        self.draw_piece('T',1+x,3,4)
-        self.draw_piece('A',1+x,3,5)
-        self.draw_piece('R',1+x,3,6)
-        self.draw_piece('T',1+x,3,7)
-
-        self.draw_piece('T',1+x,5,2)
-        self.draw_piece('O',1+x,5,3)
-
-        self.draw_piece('P',1+x,7,3)
-        self.draw_piece('L',1+x,7,4)
-        self.draw_piece('A',1+x,7,5)
-        self.draw_piece('Y',1+x,7,6)
 
     # Update all screen element
     def update_screen(self):
         print('[update_screen loop]')
         self.load_template(numbered=True)
+        self.update_button(self.action_start, self.action_reset)
         self.load_pieces(self.model.getPapan())
         self.update_player()
+        self.update_score()
         self.update_timer()
         self.update_timer_stack()
         self.update_fps()
         self.update_history()
-        self.update_button(self.action_start, self.action_reset)
-
+        
         pygame.display.update()
 
-    def action_move(self,selesai):
-        print('[action_move loop]')
-        # Get move
-        self.model.mainMulai()
-        print(*self.model.getPapan(), sep='\n')
-        p = self.model.getPemain(self.model.getGiliran())   # get current pemain ?
-        final_pos, initial_pos, action = p.main(self.model)
-        selesai = self.model.getWaktu()
-        
-        # Type of action
-        if action == self.model.A_LONCAT:
-            print('[action: loncat]')
-            for xy in final_pos:
-                modelState = self.model.mainLoncat(initial_pos[0], initial_pos[1], xy[0], xy[1])
-        elif action == self.model.A_GESER:
-            print('[action: geser]')
-            valid = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
 
+    # Main game loop
     def main(self):
         # Starting condition
         self.reset_timer()
         modelState = self.model.S_OK
 
-        # Starting animation
+        # Starting state
         while self.starting:
             self.clock.tick_busy_loop(60)
             
@@ -373,10 +467,15 @@ class gui:
                 print('[START clicked]')
                 self.click_start = False
                 self.starting = False
+                self.runningState = True
                 break
+                
+            if self.click_reset:
+                print('[RESET clicked]')
+                self.click_reset = False
+                self.__init__(self.n_board,self.p1_initial,self.p2_initial)
         
-        self.update_screen()
-        time.sleep(1)
+        self.load_template()
         # Game loop (1 round)
         while self.runningState and modelState == self.model.S_OK:
             # Frame and loop timing
@@ -407,21 +506,28 @@ class gui:
                 print('[action: geser]')
                 valid = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
 
-
             # Termination
             if self.model.akhir():
                 self.runningState = False
             modelState = self.model.ganti(selesai)
             self.reset_timer()
-            
+
+
             # Update screen frame on current state
             self.update_screen()
 
-
+            if self.click_reset:
+                print('[RESET clicked]')
+                self.click_reset = False
+                self.__init__(self.n_board,self.p1_initial,self.p2_initial)
+                self.main()
+                break
+                
             # Quit event (work to do: get and process all event from GUI)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.runningState = False
+
 
     def move_ai(self, model, selesai):
         # AI move
@@ -431,7 +537,14 @@ class gui:
         selesai = model.getWaktu()
         time_exec = model.getJatahWaktu(model.getGiliran()) - self.model.getSisaWaktu()
 
-    # !!! Work on progress to utilize multiprocessing
+
+
+
+######################################
+### ------ WORK ON PROGRESS ------ ###
+######################################
+
+    # !!! Work on progress to utilize multiprocessing for continuous timer while AI is calculating
     def main2(self):
         # Starting condition
         self.reset_timer()

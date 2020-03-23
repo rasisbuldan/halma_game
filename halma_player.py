@@ -57,7 +57,7 @@ class HalmaPlayer:
         a = 0
 
         # Dummy algorithm to simulate time
-        for i in range(0,1000000):
+        for i in range(0,10000000):
             a += i
         
         papan = model.getPapan()        
