@@ -33,6 +33,7 @@ colors = {
     'BG': (236,243,244),
     'BG_DARK': (10,31,34),
     'TEXT': (40,76,81),
+    'TEXT2': (236,243,244),
     'P1': (240,111,82),
     'P2': (87,184,77)
 }
@@ -139,14 +140,6 @@ class gui:
         self.board_10_dark  = [pygame.image.load('assets/board/board_10_dark.png'), pygame.image.load('assets/board/board_10_numbered_dark.png')]
         self.piece_8        = [0, pygame.image.load('assets/pieces_global/piece_8_1.png'), pygame.image.load('assets/pieces_global/piece_8_2.png')]
         self.piece_10       = [0, pygame.image.load('assets/pieces_global/piece_10_1.png'), pygame.image.load('assets/pieces_global/piece_10_2.png')]
-        
-        # Pieces Import
-        for i in range(1,11):
-            self.p_8[1].append(pygame.image.load('assets/pieces/8x8/' + str(100+i) + '.png'))
-            self.p_8[2].append(pygame.image.load('assets/pieces/8x8/' + str(200+i) + '.png'))
-        for i in range(1,16):
-            self.p_10[1].append(pygame.image.load('assets/pieces/10x10/' + str(100+i) + '.png'))
-            self.p_10[2].append(pygame.image.load('assets/pieces/10x10/' + str(200+i) + '.png'))
 
         # Font import
         self.font_time          = pygame.font.SysFont('Coolvetica', 120)
@@ -245,7 +238,10 @@ class gui:
     
     # Time left (from 10 seconds turn time)
     def update_timer(self):
-        self.screen.blit(self.font_time.render('{:.2f}'.format(self.get_timer()),True,(colors['TEXT'])), dest=(210,360))
+        if self.dark_mode:
+            self.screen.blit(self.font_time.render('{:.2f}'.format(self.get_timer()),True,(colors['TEXT2'])), dest=(210,360))
+        else:
+            self.screen.blit(self.font_time.render('{:.2f}'.format(self.get_timer()),True,(colors['TEXT'])), dest=(210,360))
     
     # Reserve time left (accumulative bonus time from previous move)
     def update_timer_stack(self):
@@ -258,7 +254,10 @@ class gui:
 
     # FPS by 10 pygame timer average
     def update_fps(self):
-        self.screen.blit(self.font_fps.render('FPS: {:.1f}'.format(self.clock.get_fps()),True,(colors['TEXT'])), dest=(1180,690))
+        if self.dark_mode:
+            self.screen.blit(self.font_fps.render('FPS: {:.1f}'.format(self.clock.get_fps()),True,(colors['TEXT2'])), dest=(1180,690))
+        else:
+            self.screen.blit(self.font_fps.render('FPS: {:.1f}'.format(self.clock.get_fps()),True,(colors['TEXT'])), dest=(1180,690))
 
     # Player name display
     def update_player(self):
@@ -272,7 +271,10 @@ class gui:
     # Player score display
     def update_score(self):
         # Dummy score
-        self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT'])), dest=(210,280))
+        if self.dark_mode:
+            self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT2'])), dest=(210,280))
+        else:
+            self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT'])), dest=(210,280))
 
     # History display
     # Order: latest on bottom
@@ -354,7 +356,10 @@ class gui:
         if self.n_board == 10:
             self.click_start = True
         else:
-            self.screen.blit(self.font_warning.render('Currently only 10x10 board are supported',True,(colors['TEXT'])), dest=(35,290))
+            if self.dark_mode:
+                self.screen.blit(self.font_warning.render('Currently only 10x10 board are supported',True,(colors['TEXT2'])), dest=(35,370))
+            else:
+                self.screen.blit(self.font_warning.render('Currently only 10x10 board are supported',True,(colors['TEXT'])), dest=(35,370))
     
     # Reset button clicked
     def action_reset(self):
