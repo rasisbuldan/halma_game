@@ -25,6 +25,10 @@ import threading        # Multithreading library
 import multiprocessing
 import time
 from halma_player import HalmaPlayer
+from halma_player_01_A import HalmaPlayer01
+from halma_player_02_A import HalmaPlayer02
+from halma_player_03_A import HalmaPlayer03
+from halma_player_04_A import HalmaPlayer04
 
 # Color Definition
 colors = {
@@ -38,20 +42,18 @@ colors = {
     'P2': (87,184,77)
 }
 
+p1 = HalmaPlayer01('Team 01')
+p2 = HalmaPlayer01('Team 02')
+p3 = HalmaPlayer01('Team 03')
+p4 = HalmaPlayer01('Team 04')
+
 # GUI Class
 class gui:
     # GUI Assets
     screen = 0
     clock = 0
-    title = 0
-    info_text = 0
-    button = []
-    board_8 = []
-    board_10 = []
     p_8  = [0,[0],[0]]
     p_10 = [0,[0],[0]]
-    piece_8  = []
-    piece_10 = []
     dark_mode = False
 
     # Game variable
@@ -132,8 +134,11 @@ class gui:
         # Assets Import
         self.title          = [pygame.image.load('assets/title.png'), pygame.image.load('assets/title_dark.png')]
         self.info_text      = [pygame.image.load('assets/info_turn.png'), pygame.image.load('assets/info_score.png'), pygame.image.load('assets/info_timeleft.png'), pygame.image.load('assets/info_lastmove.png')]
+        self.info_ai        = [pygame.image.load('assets/info_p1_ai.png'), pygame.image.load('assets/info_p2_ai.png')]
         self.button         = [pygame.image.load('assets/button/button_start.png'), pygame.image.load('assets/button/button_reset.png'), pygame.image.load('assets/button/button_8x8.png'), pygame.image.load('assets/button/button_10x10.png'), pygame.image.load('assets/button/button_dark.png')]
         self.button_active  = [pygame.image.load('assets/button/button_start_active.png'), pygame.image.load('assets/button/button_reset_active.png'), pygame.image.load('assets/button/button_8x8_active.png'), pygame.image.load('assets/button/button_10x10_active.png'), pygame.image.load('assets/button/button_dark_active.png')]
+        self.button_ai      = [pygame.image.load('assets/button/button_01.png'), pygame.image.load('assets/button/button_02.png'), pygame.image.load('assets/button/button_03.png'), pygame.image.load('assets/button/button_04.png')]
+        self.button_ai_active = [pygame.image.load('assets/button/button_01_active.png'), pygame.image.load('assets/button/button_02_active.png'), pygame.image.load('assets/button/button_03_active.png'), pygame.image.load('assets/button/button_04_active.png')]
         self.board_8        = [pygame.image.load('assets/board/board_8.png'), pygame.image.load('assets/board/board_8_numbered.png')]
         self.board_10       = [pygame.image.load('assets/board/board_10.png'), pygame.image.load('assets/board/board_10_numbered.png')]
         self.board_8_dark   = [pygame.image.load('assets/board/board_8_dark.png'), pygame.image.load('assets/board/board_8_numbered_dark.png')]
@@ -150,7 +155,12 @@ class gui:
         self.font_piece         = pygame.font.SysFont('Coolvetica', 40)
         self.font_score         = pygame.font.SysFont('Coolvetica', 110)
         self.font_warning       = pygame.font.SysFont('Coolvetica', 34)
-    
+
+    # Reinitialize player
+    def reinit_model(self,p1,p2):
+        self.model = HalmaModel()
+        self.modelState = self.model.S_OK      # Running state
+        self.model.awal(p1,p2)
 
     # Template Load
     def load_template(self, numbered=None):
@@ -165,7 +175,20 @@ class gui:
         if self.starting:
             self.screen.blit(self.button[2], dest=(35,230))
             self.screen.blit(self.button[3], dest=(140,230))
-            self.screen.blit(self.button[4], dest=(35,310))
+            if self.dark_mode:
+                self.screen.blit(self.button_active[4], dest=(35,310))
+            else:
+                self.screen.blit(self.button[4], dest=(35,310))
+            self.screen.blit(self.info_ai[0], dest=(35,450))
+            self.screen.blit(self.info_ai[1], dest=(35,550))
+            self.screen.blit(self.button_ai[0], dest=(180,445))
+            self.screen.blit(self.button_ai[1], dest=(270,445))
+            self.screen.blit(self.button_ai[2], dest=(360,445))
+            self.screen.blit(self.button_ai[3], dest=(450,445))
+            self.screen.blit(self.button_ai[0], dest=(180,545))
+            self.screen.blit(self.button_ai[1], dest=(270,545))
+            self.screen.blit(self.button_ai[2], dest=(360,545))
+            self.screen.blit(self.button_ai[3], dest=(450,545))
         if not self.starting:
             self.screen.blit(self.info_text[0], dest=(35,200))
             self.screen.blit(self.info_text[1], dest=(35,285))
@@ -484,7 +507,7 @@ class gui:
         # Game loop (1 round)
         while self.runningState and modelState == self.model.S_OK:
             # Frame and loop timing
-            self.clock.tick_busy_loop(75)
+            self.clock.tick_busy_loop(75)   # Framerate cap
             self.tick_timer()
 
 
@@ -509,7 +532,7 @@ class gui:
                     modelState = self.model.mainLoncat(initial_pos[0], initial_pos[1], xy[0], xy[1])
             elif action == self.model.A_GESER:
                 print('[action: geser]')
-                valid = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
+                modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
 
             # Termination
             if self.model.akhir():
@@ -521,6 +544,7 @@ class gui:
             # Update screen frame on current state
             self.update_screen()
 
+            # Reset button
             if self.click_reset:
                 print('[RESET clicked]')
                 self.click_reset = False

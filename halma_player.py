@@ -27,7 +27,7 @@ class HalmaPlayer:
     def bisaMain(self, model, papan, x1, y1):
         geser = []
         loncat = []
-        ip = self.index;
+        ip = self.index
         dTujuan = model.dalamTujuan(ip, x1, y1)
         for a in model.ARAH:
             x2 = x1 + a[0]
@@ -53,36 +53,4 @@ class HalmaPlayer:
     # (x1, y1) = posisi bidak awal
     # [(x2, y2)] = posisi tujuan (array, isi 1 kalau geser, isi banyak kalau loncat)
     def main(self, model):
-        time_mulai = time.process_time()
-        a = 0
-
-        # Dummy algorithm to simulate time
-        for i in range(0,10000000):
-            a += i
-        
-        papan = model.getPapan()        
-        b0 = model.getPosisiBidak(self.index)
-        # Randomize choice
-        seed1 = random.sample(range(10,1000), 20)
-        random.seed(random.choice(seed1))
-        l = []
-        g = []
-        while l == [] or g == []:
-            b = random.choice(b0)
-            g,l = self.bisaMain(model, papan, b[0], b[1])
-        
-        if l != [] :
-            print('algorithm time: ', time.process_time()-time_mulai)
-            return [l[0]], b, model.A_LONCAT
-
-        if g != [] :
-            print('algorithm time: ', time.process_time()-time_mulai)
-            return g, b, model.A_GESER
-        
-        print('algorithm time: ', time.process_time()-time_mulai)
-        print('HENTI')
-        return None, None, model.A_BERHENTI
-    
-            
-        
-
+        pass
