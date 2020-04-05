@@ -1,0 +1,84 @@
+Evaluation Parameter:
+    - Chebyshev distance
+    - Hop possibilities
+
+
+
+
+
+
+
+
+
+
+PSEUDOCODE
+-----------------------------
+class HalmaState:
+    attributes: 
+        depth
+        state: all pieces location
+        parent state, current state, EVAL value
+
+main(self,model) -> final,initial,action
+    get initial time
+    copy board state to local variable
+    empty list to store all moves
+
+    iteration ply
+
+        if max layer
+            # get all moves evaluation function
+            for piece in all_pieces
+                moves = get all possible moves (geser + loncat multiple)
+                
+                traversal all moves:
+                    calculate evaluation function
+                    append (initial,final,val) to all moves list
+                
+            sort all moves EVAL
+            get candidate moves (EVAL > 0 or get n largest EVAL)
+
+            run moves and save to board state tree
+            HalmaState.EVAL += local EVAL
+        
+        if min layer
+            same as max but get n smallest eval
+
+    get max EVAL value
+    get parent pos until depth 2 (our move)
+    return move
+
+
+-----------------------
+
+main(self,model) -> final,initial,action
+    get initial time
+    copy board state to local variable
+    empty list to store all moves
+
+    iteration ply
+
+        if max layer
+            # get all moves evaluation function
+            for piece in all_pieces
+                moves = get all possible moves (geser + loncat multiple)
+                
+                traversal all moves:
+                    calculate evaluation function
+                    append (initial,final,val) to all moves list
+                
+            sort all moves EVAL
+            get candidate moves (EVAL > 0 or get n largest EVAL)
+
+            run moves and save to board state tree
+            HalmaState.EVAL += local EVAL
+        
+        if min layer
+            same as max but get n smallest eval
+
+    get max EVAL value
+    get parent pos until depth 2 (our move)
+    return move
+
+
+

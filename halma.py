@@ -27,8 +27,7 @@ def halma(p1, p2):
             for xy in tujuan:
                 valid = model.mainLoncat(asal[0], asal[1], xy[0], xy[1])
                 if (valid == model.S_OK):
-                    pass
-                    #layar.tampilLoncat(model, asal[0], asal[1], xy[0], xy[1])
+                    layar.tampilLoncat(model, asal[0], asal[1], xy[0], xy[1])
         elif (aksi == model.A_GESER):
             valid = model.mainGeser(asal[0], asal[1], tujuan[0][0], tujuan[0][1])
             if (valid == model.S_OK):
