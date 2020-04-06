@@ -82,3 +82,23 @@ main(self,model) -> final,initial,action
 
 
 
+### loncat multi ###
+
+hopping = initial pos
+path_queue = initial pos
+
+while len hopping > 0:
+	pop path_queue
+	get last node from path_queue
+	add last node to hopped
+	get hop list from last node
+	
+	if get-ed hop new pos not in hopped:
+		add to hopping
+		append to path_queue: path + new hop pos
+
+return path_queue
+
+
+
+

@@ -5,7 +5,16 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Modified by Group 04
-Generation 2: Work on progress
+
+Gen 2:
+Progress:
+    - Get all hop list
+    - Basic function (v)
+
+Ongoing:
+    - Optimalization (get move with biggest delta)
+    - Evaluation function (current: only chebyshev distance)
+    - Game tree breadth minimization (prioritize depth)
 
 """
 
@@ -21,10 +30,16 @@ class HalmaStateNode:
         self.parent = parent
         self.current = current
         self.move = move
-        if self.depth % 2 == 1:
-            self.val = self.parent.val + self.calc_evaluation()
+        if parent != None:
+            if self.depth % 2 == 1:
+                self.val = self.parent.val + self.calc_evaluation()
+            else:
+                self.val = self.parent.val - self.calc_evaluation()
         else:
-            self.val = self.parent.val - self.calc_evaluation()
+            if self.depth % 2 == 1:
+                self.val = self.calc_evaluation()
+            else:
+                self.val = - self.calc_evaluation()
 
     # ---- Selector ----
     def get_move(self):
@@ -72,8 +87,8 @@ class HalmaStateNode:
             target = (0,0)
 
         # Get board pieces
-        pieces = self.get_board_pieces(self.current, self.turn)
-        pieces_opp = self.get_board_pieces(self.current, 1 + (2 - self.turn))
+        pieces = self.get_board_pieces(self.turn)
+        pieces_opp = self.get_board_pieces(1 + (2 - self.turn))
         
         # Chebyshev distance total for all pieces
         for pos in pieces:
@@ -90,41 +105,72 @@ class HalmaPlayer02(HalmaPlayer):
     def __init__(self, nama):
         super().__init__(nama)
 
-    # Calculate chebyshev distance (omnidirectional) from initial to final (tuple)
-    def calc_chebyshev(self, initial, final):
-        return max(abs(final[0] - initial[0]), abs(final[1] - initial[1]))
-
-    def get_loncat(self, board, pos, player, n):
-        loncat = []
-        for move in move_dir[player][:n]:
-            x2 = pos[0] + (2 * move[0])
-            y2 = pos[1] + (2 * move[1])
-            
-            if (not self.valid((x2,y2))) or (board[x2][y2] != 0):
-                continue
-            
-            loncat.append([pos,(x2,y2)])
-        
-        return loncat
-    
-    def get_optimized_loncat(self, node):
+    # !!! Idea
+    def get_optimized_move(self, node):
         # search traversal to matrix start from target zone and is empty
         # A* with hop moves only
 
         pass
 
+    # Calculate chebyshev distance (omnidirectional) from initial to final (tuple)
+    def calc_chebyshev(self, initial, final):
+        return max(abs(final[0] - initial[0]), abs(final[1] - initial[1]))
+    
+    # Get hop list (multiple hop)
+    def get_loncat_multi(self, board, pos, player):
+        # Helper
+        def get_loncat(pos):
+            loncat = []
+            for move in self.move_dir[player]:
+                #print('[pos]',pos)
+                #print('[move]',move)
+                x1 = pos[0] + move[0]
+                y1 = pos[1] + move[1]
+                x2 = pos[0] + (2 * move[0])
+                y2 = pos[1] + (2 * move[1])
+                
+                if self.valid((x2,y2)):
+                    if (board[x1][y1] // 100 == player) and (board[x2][y2] == 0):
+                        loncat.append((x2,y2))
+        
+            return loncat
 
+        # Main
+        hopped = []
+        path = []
+        path_queue = [[pos]]
 
-    # Get all loncat from initial position
-    # Return list of possible loncat path
-    # [[(x11,y11),(x12,y12),(x13,y13)],
-    #  [(x21,y21),(x22,y22)],
-    #  []]
+        while path_queue != []:
+            #print('[path queue]',path_queue)
+            current_path = path_queue.pop(0)
+            current_node = current_path[-1]
+            #print('[current path]',current_path)
+            #print('[current node]',current_node)
+            hopped.append(current_node)
+
+            hopping_child = get_loncat(current_node)
+            h_num = 0
+            for h_child in hopping_child:
+                if h_child not in hopped:
+                    hopped.append(h_child)
+                    #print('appending ',h_child,' to ',current_path)
+                    path_queue.append(current_path + [h_child])
+                    h_num += 1
+
+            if h_num == 0:
+                path.append(current_path)
+
+        # return [[(x2,y2),(x3,y3)],[(x2,y2),(x3,y3),(x4,y4)],...]
+        return path
+    
     def get_all_loncat(self, node):
-        loncat = []
-        for initial in node.get_board_pieces():
-            for move in move_dir[node.get_turn()]:
-                pass
+        pieces = node.get_board_pieces(node.get_turn())
+        board = node.get_current()
+
+        for piece in pieces:
+            hop_list = [h[1:] for h in self.get_loncat_multi(board, piece, node.get_turn())]
+            print('\n[----- hop list -----]',piece,' -> ',*hop_list, sep='\n')
+
     
     # Index valid
     def valid(self, pos):
@@ -133,11 +179,11 @@ class HalmaPlayer02(HalmaPlayer):
     def get_all_geser(self, node):
         geser = []
         for initial in node.get_board_pieces(node.get_turn()):
-            for move in move_dir[node.get_turn()]:
+            for move in self.move_dir[node.get_turn()]:
                 x2 = initial[0] + move[0]
                 y2 = initial[1] + move[1]
                 
-                if not valid((x2,y2)) or node.get_current()[move[0]][move[1]] != 0:
+                if not self.valid((x2,y2)) or node.get_current()[move[0]][move[1]] != 0:
                     continue
                 
                 geser.append([initial,(x2,y2)])
@@ -220,14 +266,33 @@ class HalmaPlayer02(HalmaPlayer):
         
 
                 
+# Class driver
+if __name__ == '__main__':
+    p = HalmaPlayer02('Bob')
 
+    # Search algorithm simulator (A* Search)
+    board = [[101, 102, 104, 107, 111,   0,   0,   0,   0,   0],
+             [103, 105,   0, 112,   0,   0,   0,   0,   0,   0],
+             [106, 109,   0, 112,   0,   0,   0,   0,   0,   0],
+             [110, 114, 111,   0, 211,   0, 205,   0,   0,   0],
+             [115,   0,   0,   0,   0, 214,   0,   0,   0,   0],
+             [0,     0,   0,   0,   0,   0, 207,   0, 215, 215],
+             [0,     0,   0,   0,   0,   0,   0, 208,   0, 210],
+             [0,     0,   0,   0,   0,   0,   0, 213, 209, 206],
+             [0,     0,   0,   0,   0,   0, 212,   0,   0, 203],
+             [0,     0,   0,   0,   0,   0,   0, 204, 202, 201]]
+    
+    N = HalmaStateNode(0,2,None,board,None)
+    
+    #print(*p.get_loncat_multi(board, (6,8), 2), sep='\n')
+    print(p.get_all_loncat(N))
 
 
 # ------------------------------------
 
         
         
-        """ # Random seed for pseudorandom select
+""" # Random seed for pseudorandom select
         seed1 = random.sample(range(10,1000), 20)
         random.seed(random.choice(seed1))
 
