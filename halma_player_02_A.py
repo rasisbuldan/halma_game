@@ -105,18 +105,17 @@ class HalmaPlayer02(HalmaPlayer):
     def __init__(self, nama):
         super().__init__(nama)
 
-    # !!! Idea
+    # !!! Idea for late game
     def get_optimized_move(self, node):
         # search traversal to matrix start from target zone and is empty
         # A* with hop moves only
-
         pass
 
     # Calculate chebyshev distance (omnidirectional) from initial to final (tuple)
     def calc_chebyshev(self, initial, final):
         return max(abs(final[0] - initial[0]), abs(final[1] - initial[1]))
     
-    # Get hop list (multiple hop)
+    # Get hop list (multiple hop) from initial pos in board
     def get_loncat_multi(self, board, pos, player):
         # Helper
         def get_loncat(pos):
@@ -163,36 +162,51 @@ class HalmaPlayer02(HalmaPlayer):
         # return [[(x2,y2),(x3,y3)],[(x2,y2),(x3,y3),(x4,y4)],...]
         return path
     
+    # Get all loncat possibilities for each board piece in node object
     def get_all_loncat(self, node):
+        loncat_all = []
         pieces = node.get_board_pieces(node.get_turn())
         board = node.get_current()
 
         for piece in pieces:
             hop_list = [h[1:] for h in self.get_loncat_multi(board, piece, node.get_turn())]
-            print('\n[----- hop list -----]',piece,' -> ',*hop_list, sep='\n')
+            if hop_list != [[]]:
+                loncat_all.append([piece,hop_list])
+            #print('\n[----- hop list -----]',piece,' -> ',*hop_list, sep='\n')
+        
+        return loncat_all
 
     
     # Index valid
     def valid(self, pos):
         return ((0 <= pos[0] < 10) and (0 <= pos[1] < 10))
     
+    def get_geser(self, board, pos, player):
+        geser = []
+        for move in self.move_dir[player]:
+            x2 = pos[0] + move[0]
+            y2 = pos[1] + move[1]
+            
+            if self.valid((x2,y2)) and board[move[0]][move[1]] == 0:
+                geser.append((x2,y2))
+        return geser
+
+    # Get all loncat possibilities for each board piece in node object
     def get_all_geser(self, node):
         geser = []
-        for initial in node.get_board_pieces(node.get_turn()):
+        pieces = node.get_board_pieces(node.get_turn())
+        for piece in pieces:
+            geser_buf = []
             for move in self.move_dir[node.get_turn()]:
-                x2 = initial[0] + move[0]
-                y2 = initial[1] + move[1]
+                x2 = piece[0] + move[0]
+                y2 = piece[1] + move[1]
                 
-                if not self.valid((x2,y2)) or node.get_current()[move[0]][move[1]] != 0:
-                    continue
-                
-                geser.append([initial,(x2,y2)])
+                if self.valid((x2,y2)) and node.get_current()[move[0]][move[1]] == 0:
+                    geser_buf.append((x2,y2))
+
+            geser.append([piece,geser_buf])
         
         return geser
-    
-    # Get all possible final position from initial position
-    def get_all_move(self, node):
-        pass
 
     # Called API for model
     # Return: (selected final position, initial position, action type)
@@ -285,7 +299,8 @@ if __name__ == '__main__':
     N = HalmaStateNode(0,2,None,board,None)
     
     #print(*p.get_loncat_multi(board, (6,8), 2), sep='\n')
-    print(p.get_all_loncat(N))
+    #print(*p.get_all_loncat(N), sep='\n')
+    print(*p.get_all_geser(N), sep='\n')
 
 
 # ------------------------------------
