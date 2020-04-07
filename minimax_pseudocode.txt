@@ -100,5 +100,7 @@ while len hopping > 0:
 return path_queue
 
 
-
-
+moves = [
+[(x0,y0),(x1,y1),(x2,y2),..,(xn,yn)],
+[(x0,y0),(x1,y1),(x2,y2),..,(xn,yn)]
+]

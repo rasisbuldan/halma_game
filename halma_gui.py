@@ -44,7 +44,7 @@ colors = {
 
 # Team AI initialization
 p01 = HalmaPlayer01('Team 01')
-p02 = HalmaPlayer02('Team 02')
+p02 = HalmaPlayer02('Bob')
 p03 = HalmaPlayer03('Team 03')
 p04 = HalmaPlayer04('Team 04')
 
@@ -665,6 +665,7 @@ class gui:
                 print('[action: loncat]')
                 for xy in final_pos:
                     modelState = self.model.mainLoncat(initial_pos[0], initial_pos[1], xy[0], xy[1])
+                    initial_pos = xy
             elif action == self.model.A_GESER:
                 print('[action: geser]')
                 modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
