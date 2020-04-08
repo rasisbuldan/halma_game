@@ -44,7 +44,7 @@ colors = {
 
 # Team AI initialization
 p01 = HalmaPlayer01('Team 01')
-p02 = HalmaPlayer02('Bob')
+p02 = HalmaPlayer02('Team 02')
 p03 = HalmaPlayer03('Team 03')
 p04 = HalmaPlayer04('Team 04')
 
@@ -416,9 +416,9 @@ class gui:
                 move_type = 'BERHENTI'
 
             # Player 1 move
-            if self.move_history[i][0] == 0:
+            if self.move_history[i][0] == 1:
                 self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,(self.get_color(self.color_picked[1]))), dest=(35, 510 + i*40))
-            elif self.move_history[i][0] == 1:
+            elif self.move_history[i][0] == 0:
                 self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,(self.get_color(self.color_picked[2]))), dest=(35, 510 + i*40))
 
     # (helper) Get object by 'nama' attribute
@@ -654,10 +654,10 @@ class gui:
             time_exec = self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu()
 
             # Insert to move history (4 last move, latest on top)
-            self.move_history.append([self.model.getGiliran(), initial_pos, final_pos[0], action, time_exec])
+            self.move_history.append([self.model.getGiliran(), initial_pos, final_pos, action, time_exec])
             if len(self.move_history) > 4:
                 self.move_history = self.move_history[-4:]
-            print('[move] {} {} {}'.format(initial_pos, final_pos[0], action))
+            print('[move] {} {} {}'.format(initial_pos, final_pos, action))
             print('[exec time] {}'.format(time_exec))
             
             # Type of action
@@ -668,7 +668,7 @@ class gui:
                     initial_pos = xy
             elif action == self.model.A_GESER:
                 print('[action: geser]')
-                modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
+                modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0], final_pos[1])
 
             # Termination
             if self.model.akhir():
@@ -772,6 +772,6 @@ class gui:
 # Execute if invoked directly from script
 if __name__ == "__main__":
     # Initial value 10x10 with player1 is p01 and player 2 is p02 (changeable in starting state)
-    g = gui(n_board=10, p1=p01, p2=p02)
+    g = gui(n_board=10, p1=p02, p2=p04)
     g.main()
     pygame.quit()

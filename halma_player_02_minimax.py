@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!! DEPRECATED !!!!!!!!
+!!!!! WORK ON PROGRESS !!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Modified by Group 04
@@ -224,8 +224,8 @@ class HalmaPlayer02(HalmaPlayer):
     # Return: (selected final position, initial position, action type)
     def main(self, model):
         # AI parameter
-        n_ply = 2
-        n_move = 15
+        n_ply = 4
+        n_move = 30
         
         # Copy model to local
         board = model.getPapan()[:]
