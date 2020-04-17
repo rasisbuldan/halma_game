@@ -12,6 +12,3 @@ from halma_model import HalmaModel
 class HalmaPlayer04B(HalmaPlayer):
     def __init(self, nama):
         super().__init__(nama)
-    
-    def main(self, model):
-        pass

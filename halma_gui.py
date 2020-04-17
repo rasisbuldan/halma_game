@@ -3,42 +3,45 @@ Halma GUI (Using halma_model script)
 
 To do improvement:
     - Continuous timer (while AI computing moves)
-    - 4 player (team)
     - Human player
     - Debug/Strategy mode
 
 To do:
-    - Decompose script to module halma_display
-    - Round winner screen
-    - Player A/B (4P support)
-    - 4 player color picker (double click)
+    - 4 player color picker (multiple click)
     - Button create from text
-    - Pause game?
+    - Pause game function
+    - Decompose script to module halma_display
     - Remove 8x8 support?
     - Verbose / quiet parameter
     - Reset function redefinition
-    - Analytics (avg time)
+    - Analytics (avg time, move arrow)
     - Font import from assets file
     - PyPi package
 
-4p notes:
+To do test:
+    - Round winner - next round
 
 '''
 
 # Module import
 import pygame
+from halma_model import HalmaModel
 import time
 import math
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/player')
 
-from halma_model import HalmaModel
+# PLayer AI script import
 from halma_player import HalmaPlayer
-from halma_player_01_A import HalmaPlayer01
-from halma_player_02_A import HalmaPlayer02
-from halma_player_03_A import HalmaPlayer03
-from halma_player_04_A import HalmaPlayer04
+from halma_player_01_A import HalmaPlayer01A
+from halma_player_01_B import HalmaPlayer01B
+from halma_player_02_A import HalmaPlayer02A
+from halma_player_02_B import HalmaPlayer02B
+from halma_player_03_A import HalmaPlayer03A
+from halma_player_03_B import HalmaPlayer03B
+from halma_player_04_A import HalmaPlayer04A
+from halma_player_04_B import HalmaPlayer04B
 
 # Color Definition
 colors = {
@@ -60,10 +63,10 @@ colors = {
 colors_enum = list(enumerate(colors))
 
 # Team AI initialization
-p01 = [HalmaPlayer01('Team 01-A'), HalmaPlayer01('Team 01-B')]
-p02 = [HalmaPlayer02('Team 02-A'), HalmaPlayer02('Team 02-B')]
-p03 = [HalmaPlayer03('Team 03-A'), HalmaPlayer03('Team 03-B')]
-p04 = [HalmaPlayer04('Team 04-A'), HalmaPlayer04('Team 04-B')]
+p01 = [HalmaPlayer01A('Team 01-A'), HalmaPlayer01B('Team 01-B')]
+p02 = [HalmaPlayer02A('Team 02-A'), HalmaPlayer02B('Team 02-B')]
+p03 = [HalmaPlayer03A('Team 03-A'), HalmaPlayer03B('Team 03-B')]
+p04 = [HalmaPlayer04A('Team 04-A'), HalmaPlayer04B('Team 04-B')]
 p01[0].setTeman(p01[1])
 p02[0].setTeman(p02[1])
 p03[0].setTeman(p03[1])
@@ -94,12 +97,16 @@ class gui:
     click_start = False
     click_reset = False
     click_pause = False
+    click_prev1 = False
+    click_prev2 = False
+    prev_pause = False
     starting = True
     shift_i = 0
     p1_selected = 0
     p2_selected = 0
     score = [0,0]
-    color_picked = [0,0,0]
+    color_click = [0,False,False]
+    color_picked = [0,0,0,0,0]
 
     # Font and object variable
     font_time = 0
@@ -424,10 +431,7 @@ class gui:
     def update_timer_stack(self):
         p = self.model.getGiliran()
         stack = self.model.getJatahWaktu(p)
-        if p == 0:
-            self.screen.blit(self.font_time_stack.render('({:.2f})'.format(stack),True,(self.get_color(self.color_picked[1]))), dest=(400,362))
-        elif p == 1:
-            self.screen.blit(self.font_time_stack.render('({:.2f})'.format(stack),True,(self.get_color(self.color_picked[2]))), dest=(400,362))
+        self.screen.blit(self.font_time_stack.render('({:.2f})'.format(stack),True,(self.get_color(self.color_picked[p+1] + 6))), dest=(400,362))
 
     # FPS by 10 pygame timer tick average
     def update_fps(self):
@@ -440,10 +444,7 @@ class gui:
     def update_player(self):
         p = self.model.getGiliran()
         player = self.model.getPemain(p)
-        if p == 0:
-            self.screen.blit(self.font_player_name.render(player.nama,True,(self.get_color(self.color_picked[1]))), dest=(210,195))
-        elif p == 1:
-            self.screen.blit(self.font_player_name.render(player.nama,True,(self.get_color(self.color_picked[2]))), dest=(210,195))
+        self.screen.blit(self.font_player_name.render(player.nama,True,(self.get_color(self.color_picked[p+1] + 6))), dest=(210,195))
 
     # Player score display
     def update_score(self):
@@ -469,9 +470,16 @@ class gui:
                 move_type = 'BERHENTI'
 
             # Player 1 move
-            if move_hist[i][0] == 0:
-                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,
-                                    (self.get_color(self.color_picked[move_hist[i][0]] + 1))), dest=(35, 510 + i*40))
+            self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,
+                                (self.get_color(self.color_picked[move_hist[i][0] + 1] + 6))), dest=(35, 510 + i*40))
+
+    # Show player wins text
+    def show_winner(self,p):
+        # Dummy score
+        if self.dark_mode:
+            self.screen.blit(self.font_warning.render('{} WIN!'.format(self.get_object(p)[0].nama[:-1]),True,(colors['TEXT2'])), dest=(650,680))
+        else:
+            self.screen.blit(self.font_warning.render('{} WIN!'.format(self.get_object(p)[0].nama)[:-1],True,(colors['TEXT'])), dest=(650,680))
 
     # (helper) Get object by 'nama' attribute
     def get_object(self, p):
@@ -517,6 +525,7 @@ class gui:
 
         # Pause button
         if self.in_region(mouse,345,120,126,44):
+            print('[hover pause]',self.prev_pause)
             self.screen.blit(self.button_active[2], dest=(345,120))
             if click[0] == 1:
                 print('[click pause]')
@@ -567,14 +576,14 @@ class gui:
                 if self.in_region(mouse,180 + 90*i,445,69,50) or self.p1_selected == (i + 1):
                     self.screen.blit(self.button_ai_active[i], dest=(180 + 90*i,445))
                     if click[0] == 1 and self.in_region(mouse,180 + 90*i,445,69,50) and self.p1_selected != (i + 1):
-                        print('[{} selected as p1]'.format(self.get_object(i+1).nama))
+                        print('[{}-{} selected as p1]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
                         self.p1_selected = i + 1
                 
                 # Row 2
                 if self.in_region(mouse,180 + 90*i,565,69,50) or self.p2_selected == (i + 1):
                     self.screen.blit(self.button_ai_active[i], dest=(180 + 90*i,565))
                     if click[0] == 1 and self.in_region(mouse,180 + 90*i,565,69,50) and self.p2_selected != (i + 1):
-                        print('[{} selected as p2]'.format(self.get_object(i+1).nama))
+                        print('[{}-{} selected as p1]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
                         self.p2_selected = i + 1
 
             # Color picker
@@ -583,13 +592,15 @@ class gui:
                 if self.in_region_circle(mouse,180 + 44*i,500,30) or i == self.color_picked[1] or i == self.color_picked[3]:
                     self.screen.blit(self.cp_selected, dest=(180 + 44*i,500))
                     if click[0] == 1 and self.in_region_circle(mouse,180 + 44*i,500,30):
-                        self.color_picked[1] = i
+                            self.color_picked[1] = i
+                            self.color_picked[3] = i
                 
                 # Player 2
                 if self.in_region_circle(mouse,180 + 44*i,620,30) or i == self.color_picked[2] or i == self.color_picked[4]:
                     self.screen.blit(self.cp_selected, dest=(180 + 44*i,620))
-                    if click[0] == 1 and self.in_region_circle(mouse,180 + 44*i,500,30):
+                    if click[0] == 1 and self.in_region_circle(mouse,180 + 44*i,620,30):
                         self.color_picked[2] = i
+                        self.color_picked[4] = i
                 
 
     # Start button clicked
@@ -608,7 +619,7 @@ class gui:
 
     # Pause button clicked
     def action_pause(self):
-        self.click_pause = True
+        self.click_pause = not self.click_pause
 
     # Update all screen element (board,piece,info,button,fps)
     def update_screen(self):
@@ -678,10 +689,10 @@ class gui:
             self.clock.tick_busy_loop(75)   # Framerate cap
             self.tick_timer()
 
-
             # AI move
             self.model.mainMulai()
             p = self.model.getPemain(self.model.getGiliran())   # get current pemain ?
+            print(p.nama)
             final_pos, initial_pos, action = p.main(self.model)
             self.move_count += 1
             print('[move count] ',self.move_count)
@@ -703,40 +714,77 @@ class gui:
                     initial_pos = xy
             elif action == self.model.A_GESER:
                 print('[action: geser]')
-                modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0], final_pos[1])
+                modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
 
             # Termination
-            if self.model.akhir():
-                #self.runningState = False
+            if self.n_player == 2:
+                if self.model.akhir():
+                    pieces = self.model.getPosisiBidak(0)
+                    
+                    # Count pieces
+                    k = 0
+                    for piece in pieces:
+                        if self.model.dalamTujuan(0,piece[0],piece[1]):
+                            k += 1
+                    if k == 15:
+                        print('[P1 Menang!]')
+                        self.show_winner(self.p1_selected)
+                        self.score[0] += 1
+                    else:
+                        print('[P2 Menang!]')
+                        self.show_winner(self.p2_selected)
+                        self.score[1] += 1
+                    
+                    # Waiting for start button press
+                    self.click_start = False
+                    while not self.click_start:
+                        self.update_button()
 
-                pieces = self.model.getPosisiBidak(0)
+                    # Reinitialize halma model (next round)
+                    modelState = self.model.S_OK
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+                    self.starting = True
+                    self.main()
 
-                k = 0
-                for piece in pieces:
-                    if self.model.dalamTujuan(0,piece[0],piece[1]):
-                        k += 1
-                if k == 15:
-                    print('[P1 Menang!]')
-                    self.score[0] += 1
-                else:
-                    print('[P2 Menang!]')
-                    self.score[1] += 1
+            elif self.n_player == 4:
+                if self.model.akhirBeregu():
+                    pieces1 = self.model.getPosisiBidak(0)
+                    pieces3 = self.model.getPosisiBidak(2)
+                    
+                    # Count pieces
+                    k = 0
+                    for piece in pieces1:
+                        if self.model.dalamTujuan(0,piece[0],piece[1]):
+                            k += 1
+                    for piece in pieces3:
+                        if self.model.dalamTujuan(2,piece[0],piece[1]):
+                            k += 1
 
-                modelState = self.model.S_OK
+                    if k == 26:
+                        print('[P1 Menang!]')
+                        self.show_winner(self.p1_selected)
+                        self.score[0] += 1
+                    else:
+                        print('[P2 Menang!]')
+                        self.show_winner(self.p2_selected)
+                        self.score[1] += 1
+                    
+                    # Waiting for start button press
+                    self.click_start = False
+                    while not self.click_start:
+                        self.update_button()
 
-                # Reinitialize halma model
-                self.reinit_model(self.p1_initial,self.p2_initial)
+                    # Reinitialize halma model (next round)
+                    modelState = self.model.S_OK
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+                    self.starting = True
+                    self.main()
 
-                # Revert state (recursively call main method)
-                self.starting = True
-                self.main()
             modelState = self.model.ganti(selesai)
             self.reset_timer()
 
-
             # Update screen frame on current state
             self.update_screen()
-            #time.sleep(5)
 
             # Reset button
             if self.click_reset:
