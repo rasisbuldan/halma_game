@@ -15,7 +15,6 @@ To do:
     - Verbose / quiet parameter
     - Reset function redefinition
     - Analytics (avg time, move arrow)
-    - Font import from assets file
     - PyPi package
 
 To do test:
@@ -221,14 +220,14 @@ class gui:
         self.cp_selected        = pygame.image.load('assets/pieces/cpselected.png')
 
         # Font definition
-        self.font_time          = pygame.font.SysFont('Coolvetica', 120)
-        self.font_time_stack    = pygame.font.SysFont('Coolvetica', 60)
-        self.font_player_name   = pygame.font.SysFont('Coolvetica', 100)
-        self.font_fps           = pygame.font.SysFont('Coolvetica', 28)
-        self.font_move_history  = pygame.font.SysFont('Coolvetica', 40)
-        self.font_piece         = pygame.font.SysFont('Coolvetica', 40)
-        self.font_score         = pygame.font.SysFont('Coolvetica', 110)
-        self.font_warning       = pygame.font.SysFont('Coolvetica', 34)
+        self.font_time          = pygame.font.Font('assets/fonts/coolvetica.ttf', 120)
+        self.font_time_stack    = pygame.font.Font('assets/fonts/coolvetica.ttf', 60)
+        self.font_player_name   = pygame.font.Font('assets/fonts/coolvetica.ttf', 100)
+        self.font_fps           = pygame.font.Font('assets/fonts/coolvetica.ttf', 28)
+        self.font_move_history  = pygame.font.Font('assets/fonts/coolvetica.ttf', 40)
+        self.font_piece         = pygame.font.Font('assets/fonts/coolvetica.ttf', 40)
+        self.font_score         = pygame.font.Font('assets/fonts/coolvetica.ttf', 110)
+        self.font_warning       = pygame.font.Font('assets/fonts/coolvetica.ttf', 34)
 
     # Reinitialize player
     # to do : 4 player model init
@@ -360,6 +359,16 @@ class gui:
 
         # Draw text
         self.screen.blit(textSurface, textRect)
+
+    # Custom text button
+    def draw_button(self, text, color, x, y):
+        # Create text object
+        textSurface = self.font_piece.render(text, True, (colors['WHITE']))
+        textRect = textSurface.get_rect()
+
+        # Draw button
+        textRect
+
 
     # Get color dictionary by index
     def get_color(self, i):
@@ -525,7 +534,6 @@ class gui:
 
         # Pause button
         if self.in_region(mouse,345,120,126,44):
-            print('[hover pause]',self.prev_pause)
             self.screen.blit(self.button_active[2], dest=(345,120))
             if click[0] == 1:
                 print('[click pause]')
