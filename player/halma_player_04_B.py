@@ -9,7 +9,7 @@ from halma_player import HalmaPlayer
 from halma_model import HalmaModel
 
 
-class HalmaPlayer04A(HalmaPlayer):
+class HalmaPlayer04B(HalmaPlayer):
     def __init(self, nama):
         super().__init__(nama)
     

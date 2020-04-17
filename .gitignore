@@ -1,4 +1,6 @@
 __pycache__/
-*/__pycache__/
+player/__pycache__/
+**/__pycache__/
 *playground.py
 .vscode/
+player/working/
