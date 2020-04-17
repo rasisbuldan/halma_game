@@ -15,6 +15,7 @@ class HalmaPlayer:
     nomor = 1    
     index = 0
     papan = []
+    teman = None
     
     def __init__(self, nama):
         self.nama = nama
@@ -22,6 +23,9 @@ class HalmaPlayer:
     def setNomor(self, nomor):
         self.nomor = nomor
         self.index = nomor-1
+    
+    def setTeman(self, p):
+        self.teman = p
 
     # mengembalikan semua kemungkikan main (geser / loncat) bidak di (x1, y1)
     def bisaMain(self, model, papan, x1, y1):
@@ -53,4 +57,27 @@ class HalmaPlayer:
     # (x1, y1) = posisi bidak awal
     # [(x2, y2)] = posisi tujuan (array, isi 1 kalau geser, isi banyak kalau loncat)
     def main(self, model):
-        pass
+        random.seed(time.process_time_ns())
+        papan = model.getPapan()
+        b0 = model.getPosisiBidak(self.index)
+        random.shuffle(b0)
+
+        k = 0
+        # Dummy algorithms for delay
+        for i in range(10000000):
+            k += i
+
+        for b in b0:
+            g,l = self.bisaMain(model, papan, b[0], b[1])
+            
+            # Randomize move
+            random.shuffle(g)
+            random.shuffle(l)
+
+            if g != [] :
+                #print('return g',[g[0]],b,model.A_GESER)
+                return [g[0]], b, model.A_GESER
+            if l != [] :
+                #print('return l',[l[0]],b,model.A_LONCAT)
+                return [l[0]], b, model.A_LONCAT
+        return None, None, model.A_BERHENTI
