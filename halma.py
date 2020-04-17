@@ -8,6 +8,8 @@ Program utama, bekerja sebagai controller
 from halma_model import HalmaModel
 from halma_view import HalmaView
 from halma_player import HalmaPlayer
+from halma_player_02_A import HalmaPlayer02
+from halma_player_04_A import HalmaPlayer04
 
 model = HalmaModel()
 layar = HalmaView()
@@ -45,8 +47,8 @@ def halma(p1, p2):
     layar.tampilAkhir(model, valid)
         
 
-p1=HalmaPlayer("Pintar")
-p2=HalmaPlayer("Cerdas")
+p1=HalmaPlayer02("Pintar")
+p2=HalmaPlayer04("Cerdas")
 
 halma(p1, p2)
 

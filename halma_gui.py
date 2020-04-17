@@ -1,23 +1,39 @@
 ''' 
 Halma GUI (Using halma_model script)
 
-Team 04:
-Dimas Apeco Putra (13316015)
-Rasis Syauqi Buldan (13316043)
-Thoriq Fauzan Ariandi (13316063)
-
 To do improvement:
     - Continuous timer (while AI computing moves)
     - 4 player (team)
     - Human player
     - Debug/Strategy mode
+
+To do:
+    - Decompose script to module halma_display
+    - Round winner screen
+    - Player A/B (4P support)
+    - 4 player color picker (double click)
+    - Button create from text
+    - Pause game?
+    - Remove 8x8 support?
+    - Verbose / quiet parameter
+    - Reset function redefinition
+    - Analytics (avg time)
+    - Font import from assets file
+    - PyPi package
+
+4p notes:
+
 '''
+
+# Module import
 import pygame
-from halma_model import HalmaModel
-import threading        # Multithreading library
-import multiprocessing
 import time
 import math
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/player')
+
+from halma_model import HalmaModel
 from halma_player import HalmaPlayer
 from halma_player_01_A import HalmaPlayer01
 from halma_player_02_A import HalmaPlayer02
@@ -41,12 +57,17 @@ colors = {
     'RED':      (240,111,82),
     'YELLOW':   (241,196,15)
 }
+colors_enum = list(enumerate(colors))
 
 # Team AI initialization
-p01 = HalmaPlayer01('Team 01')
-p02 = HalmaPlayer02('Team 02')
-p03 = HalmaPlayer03('Team 03')
-p04 = HalmaPlayer04('Team 04')
+p01 = [HalmaPlayer01('Team 01-A'), HalmaPlayer01('Team 01-B')]
+p02 = [HalmaPlayer02('Team 02-A'), HalmaPlayer02('Team 02-B')]
+p03 = [HalmaPlayer03('Team 03-A'), HalmaPlayer03('Team 03-B')]
+p04 = [HalmaPlayer04('Team 04-A'), HalmaPlayer04('Team 04-B')]
+p01[0].setTeman(p01[1])
+p02[0].setTeman(p02[1])
+p03[0].setTeman(p03[1])
+p04[0].setTeman(p04[1])
 
 # GUI Class
 class gui:
@@ -67,33 +88,22 @@ class gui:
     n_player = 0
     timer_time = 0
     timer_stack = 0
+    move_count = 0
     move_timer = 0
     move_history = []
     click_start = False
     click_reset = False
+    click_pause = False
     starting = True
     shift_i = 0
     p1_selected = 0
     p2_selected = 0
+    score = [0,0]
     color_picked = [0,0,0]
 
     # Font and object variable
     font_time = 0
     font_fps = 0
-
-    # State simulator
-    # Access: self.PAPAN_10_15x2[row][col]
-    PAPAN_10_15x2 = [[101, 102, 104, 107, 111, 0,   0,   0,   0,   0  ],
-                     [103, 0, 108, 112,   0,   0,   0,   0,   0,   0  ],
-                     [106, 109, 113, 0,   0,   0,   0,   0,   0,   0  ],
-                     [110, 114, 0,   0,   0,   0,   105, 0,   0,   0  ],
-                     [115, 0,   0,   0,   0,   0,   0,   0,   0,   0  ],
-                     [0,   0,   0,   0,   0,   0,   0,   0,   0,   215],
-                     [0,   0,   0,   0,   0,   0,   0,   0,   214, 210],
-                     [0,   0,   0,   211, 0,   0,   0,   213, 209, 206],
-                     [0,   0,   0,   0,   0,   0,   212, 208, 205, 203],
-                     [0,   0,   0,   0,   0,   0,   207, 204, 202, 201]]
-    
 
     # Initialization
     def __init__(self, n_board, p1, p2):
@@ -101,9 +111,9 @@ class gui:
         pygame.init()
         self.screen = pygame.display.set_mode((1280,720))    # Resolution set
         pygame.display.set_icon(pygame.image.load('assets/icon.png'))
-        pygame.display.set_caption('Halma (pre-alpha) v0.1')
+        pygame.display.set_caption('Halma (Beta) v0.2')
         
-        # Board size definition
+        # Board parameter initialization
         self.n_board = n_board
         if self.n_board == 8:
             self.d = 75
@@ -114,45 +124,94 @@ class gui:
             self.x0 = 623
             self.y0 = 63
 
-        # Player parameter initialization state-save
-        self.p1_initial = p1
-        self.p2_initial = p2
-        self.p1_selected = p1.nama
-        self.p2_selected = p2.nama
-        self.color_picked = [0,6,2]     # Default: p1: red, p2: green
+        # Player parameter initialization
+        self.n_player = 2
+        
+        self.p1_initial = [p1[0],p1[1]]
+        self.p2_initial = [p2[0],p2[1]]
+        self.p1_selected = 3
+        self.p2_selected = 4
+        self.color_picked = [0, 6, 2, 3, 0]     # Default: p1: [red,orange], p2: [green,blue]
         
         # Game state
         self.starting = True
         self.runningState = False
-        
-        # Utilities
-        self.xi = 0
-        self.shift_i = 0
+        self.score = [0,0]
 
         # Game model
         self.model = HalmaModel()
         self.modelState = self.model.S_OK      # Running state
-        self.model.awal(p1,p2)
+        self.model.awal(p1[0],p2[0])
 
         # Timer initialization
         self.clock = pygame.time.Clock()
 
         # Assets Import
-        self.title          = [pygame.image.load('assets/title.png'), pygame.image.load('assets/title_dark.png')]
-        self.info_text      = [pygame.image.load('assets/info/info_turn.png'), pygame.image.load('assets/info/info_score.png'), pygame.image.load('assets/info/info_timeleft.png'), pygame.image.load('assets/info/info_lastmove.png')]
-        self.info_ai        = [pygame.image.load('assets/info/info_p1_ai.png'), pygame.image.load('assets/info/info_p2_ai.png')]
-        self.button         = [pygame.image.load('assets/button/button_start.png'), pygame.image.load('assets/button/button_reset.png'), pygame.image.load('assets/button/button_8x8.png'), pygame.image.load('assets/button/button_10x10.png'), pygame.image.load('assets/button/button_dark.png')]
-        self.button_active  = [pygame.image.load('assets/button/button_start_active.png'), pygame.image.load('assets/button/button_reset_active.png'), pygame.image.load('assets/button/button_8x8_active.png'), pygame.image.load('assets/button/button_10x10_active.png'), pygame.image.load('assets/button/button_dark_active.png')]
-        self.button_ai      = [pygame.image.load('assets/button/button_01.png'), pygame.image.load('assets/button/button_02.png'), pygame.image.load('assets/button/button_03.png'), pygame.image.load('assets/button/button_04.png')]
-        self.button_ai_active = [pygame.image.load('assets/button/button_01_active.png'), pygame.image.load('assets/button/button_02_active.png'), pygame.image.load('assets/button/button_03_active.png'), pygame.image.load('assets/button/button_04_active.png')]
-        self.board_8        = [pygame.image.load('assets/board/board_8.png'), pygame.image.load('assets/board/board_8_numbered.png')]
-        self.board_10       = [pygame.image.load('assets/board/board_10.png'), pygame.image.load('assets/board/board_10_numbered.png')]
-        self.board_8_dark   = [pygame.image.load('assets/board/board_8_dark.png'), pygame.image.load('assets/board/board_8_numbered_dark.png')]
-        self.board_10_dark  = [pygame.image.load('assets/board/board_10_dark.png'), pygame.image.load('assets/board/board_10_numbered_dark.png')]
-        self.piece_8        = [pygame.image.load('assets/pieces/8x8_blue.png'), pygame.image.load('assets/pieces/8x8_cyan.png'), pygame.image.load('assets/pieces/8x8_green.png'), pygame.image.load('assets/pieces/8x8_orange.png'), pygame.image.load('assets/pieces/8x8_pink.png'), pygame.image.load('assets/pieces/8x8_purple.png'), pygame.image.load('assets/pieces/8x8_red.png'), pygame.image.load('assets/pieces/8x8_yellow.png')]
-        self.piece_10       = [pygame.image.load('assets/pieces/10x10_blue.png'), pygame.image.load('assets/pieces/10x10_cyan.png'), pygame.image.load('assets/pieces/10x10_green.png'), pygame.image.load('assets/pieces/10x10_orange.png'), pygame.image.load('assets/pieces/10x10_pink.png'), pygame.image.load('assets/pieces/10x10_purple.png'), pygame.image.load('assets/pieces/10x10_red.png'), pygame.image.load('assets/pieces/10x10_yellow.png')]
-        self.color_picker   = [pygame.image.load('assets/pieces/cp_blue.png'), pygame.image.load('assets/pieces/cp_cyan.png'), pygame.image.load('assets/pieces/cp_green.png'), pygame.image.load('assets/pieces/cp_orange.png'), pygame.image.load('assets/pieces/cp_pink.png'), pygame.image.load('assets/pieces/cp_purple.png'), pygame.image.load('assets/pieces/cp_red.png'), pygame.image.load('assets/pieces/cp_yellow.png')]
-        self.cp_selected    = pygame.image.load('assets/pieces/cpselected.png')
+        self.title              = [pygame.image.load('assets/title.png'),
+                                   pygame.image.load('assets/title_dark.png')]
+        self.info_text          = [pygame.image.load('assets/info/info_turn.png'),
+                                   pygame.image.load('assets/info/info_score.png'),
+                                   pygame.image.load('assets/info/info_timeleft.png'),
+                                   pygame.image.load('assets/info/info_lastmove.png')]
+        self.info_ai            = [pygame.image.load('assets/info/info_p1_ai.png'),
+                                   pygame.image.load('assets/info/info_p2_ai.png')]
+        self.button             = [pygame.image.load('assets/button/button_start.png'),
+                                   pygame.image.load('assets/button/button_reset.png'),
+                                   pygame.image.load('assets/button/button_pause.png'),
+                                   pygame.image.load('assets/button/button_8x8.png'),
+                                   pygame.image.load('assets/button/button_10x10.png'),
+                                   pygame.image.load('assets/button/button_2p.png'),
+                                   pygame.image.load('assets/button/button_4p.png'),
+                                   pygame.image.load('assets/button/button_dark.png')]
+        self.button_active      = [pygame.image.load('assets/button/button_start_active.png'),
+                                   pygame.image.load('assets/button/button_reset_active.png'),
+                                   pygame.image.load('assets/button/button_pause_active.png'),
+                                   pygame.image.load('assets/button/button_8x8_active.png'),
+                                   pygame.image.load('assets/button/button_10x10_active.png'),
+                                   pygame.image.load('assets/button/button_2p_active.png'),
+                                   pygame.image.load('assets/button/button_4p_active.png'),
+                                   pygame.image.load('assets/button/button_dark_active.png')]
+        self.button_ai          = [pygame.image.load('assets/button/button_01.png'),
+                                   pygame.image.load('assets/button/button_02.png'),
+                                   pygame.image.load('assets/button/button_03.png'),
+                                   pygame.image.load('assets/button/button_04.png')]
+        self.button_ai_active   = [pygame.image.load('assets/button/button_01_active.png'),
+                                   pygame.image.load('assets/button/button_02_active.png'),
+                                   pygame.image.load('assets/button/button_03_active.png'),
+                                   pygame.image.load('assets/button/button_04_active.png')]
+        self.board_8            = [pygame.image.load('assets/board/board_8.png'),
+                                   pygame.image.load('assets/board/board_8_numbered.png')]
+        self.board_10           = [pygame.image.load('assets/board/board_10.png'),
+                                   pygame.image.load('assets/board/board_10_numbered.png')]
+        self.board_8_dark       = [pygame.image.load('assets/board/board_8_dark.png'),
+                                   pygame.image.load('assets/board/board_8_numbered_dark.png')]
+        self.board_10_dark      = [pygame.image.load('assets/board/board_10_dark.png'),
+                                   pygame.image.load('assets/board/board_10_numbered_dark.png')]
+        self.piece_8            = [pygame.image.load('assets/pieces/8x8_blue.png'),
+                                   pygame.image.load('assets/pieces/8x8_cyan.png'),
+                                   pygame.image.load('assets/pieces/8x8_green.png'),
+                                   pygame.image.load('assets/pieces/8x8_orange.png'),
+                                   pygame.image.load('assets/pieces/8x8_pink.png'),
+                                   pygame.image.load('assets/pieces/8x8_purple.png'),
+                                   pygame.image.load('assets/pieces/8x8_red.png'),
+                                   pygame.image.load('assets/pieces/8x8_yellow.png')]
+        self.piece_10           = [pygame.image.load('assets/pieces/10x10_blue.png'),
+                                   pygame.image.load('assets/pieces/10x10_cyan.png'),
+                                   pygame.image.load('assets/pieces/10x10_green.png'),
+                                   pygame.image.load('assets/pieces/10x10_orange.png'),
+                                   pygame.image.load('assets/pieces/10x10_pink.png'),
+                                   pygame.image.load('assets/pieces/10x10_purple.png'),
+                                   pygame.image.load('assets/pieces/10x10_red.png'),
+                                   pygame.image.load('assets/pieces/10x10_yellow.png')]
+        self.color_picker       = [pygame.image.load('assets/pieces/cp_blue.png'),
+                                   pygame.image.load('assets/pieces/cp_cyan.png'),
+                                   pygame.image.load('assets/pieces/cp_green.png'),
+                                   pygame.image.load('assets/pieces/cp_orange.png'),
+                                   pygame.image.load('assets/pieces/cp_pink.png'),
+                                   pygame.image.load('assets/pieces/cp_purple.png'),
+                                   pygame.image.load('assets/pieces/cp_red.png'),
+                                   pygame.image.load('assets/pieces/cp_yellow.png')]
+        self.cp_selected        = pygame.image.load('assets/pieces/cpselected.png')
 
         # Font definition
         self.font_time          = pygame.font.SysFont('Coolvetica', 120)
@@ -165,12 +224,17 @@ class gui:
         self.font_warning       = pygame.font.SysFont('Coolvetica', 34)
 
     # Reinitialize player
+    # to do : 4 player model init
     def reinit_model(self,p1,p2):
         self.p1_initial = p1
         self.p2_initial = p2
         self.model = HalmaModel()
         self.modelState = self.model.S_OK      # Running state
-        self.model.awal(p1,p2)
+        
+        if self.n_player == 2:
+            self.model.awal(p1[0],p2[0])
+        else:
+            self.model.awal(p1[0],p2[0],p1[1],p2[1])
 
     # Template Load
     def load_template(self, numbered=None):
@@ -182,22 +246,27 @@ class gui:
             self.screen.fill(colors['BG'])
             self.screen.blit(self.title[0], dest=(35,25))
         
-        # Start and reset button
+        # Start, reset, and pause button
         self.screen.blit(self.button[0], dest=(35,120))
         self.screen.blit(self.button[1], dest=(190,120))
+        self.screen.blit(self.button[2], dest=(345,120))
         
-        # Show on starting state
+        # Show on starting screen
         if self.starting:
             # 8x8 and 10x10 button
-            self.screen.blit(self.button[2], dest=(35,230))
-            self.screen.blit(self.button[3], dest=(140,230))
+            self.screen.blit(self.button[3], dest=(35,230))
+            self.screen.blit(self.button[4], dest=(140,230))
             
             # Dark mode button
             if self.dark_mode:
-                self.screen.blit(self.button_active[4], dest=(35,310))
+                self.screen.blit(self.button_active[7], dest=(35,310))
             else:
-                self.screen.blit(self.button[4], dest=(35,310))
-            
+                self.screen.blit(self.button[7], dest=(35,310))
+
+            # Player count button
+            self.screen.blit(self.button[5], dest=(280,230))
+            self.screen.blit(self.button[6], dest=(360,230))
+
             # AI player select button
             self.screen.blit(self.info_ai[0], dest=(35,450))
             self.screen.blit(self.info_ai[1], dest=(35,570))
@@ -211,7 +280,7 @@ class gui:
                 self.screen.blit(self.color_picker[i], dest=(180 + i*44,620))
         
         # Show on playing state
-        if not self.starting:
+        else:
             # Playing info
             self.screen.blit(self.info_text[0], dest=(35,200))  # Player
             self.screen.blit(self.info_text[1], dest=(35,285))  # Score
@@ -266,10 +335,10 @@ class gui:
                 if piece_id != 0:
                     self.draw_piece(str(piece_id),self.color_picked[player_id],i,j)
     
-    # Custom text piece (currently 10x10 supported)
+    # Custom text piece
     # Blit to index of board: row(i), column(j)
     # Color index: 0(blue), 1(cyan), 2(green), 3(orange), 4(pink), 5(purple), 6(red), 7(yellow)
-    def draw_piece(self,text,color,i,j):
+    def draw_piece(self, text, color, i, j):
         # Create text object
         textSurface = self.font_piece.render(text, True, (colors['WHITE']))
         textRect = textSurface.get_rect()
@@ -286,26 +355,11 @@ class gui:
         self.screen.blit(textSurface, textRect)
 
     # Get color dictionary by index
-    def get_color(self,i):
-        if i == 0:
-            return colors['BLUE']
-        elif i == 1:
-            return colors['CYAN']
-        elif i == 2:
-            return colors['GREEN']
-        elif i == 3:
-            return colors['ORANGE']
-        elif i == 4:
-            return colors['PINK']
-        elif i == 5:
-            return colors['PURPLE']
-        elif i == 6:
-            return colors['RED']
-        elif i == 7:
-            return colors['YELLOW']
+    def get_color(self, i):
+        return colors[colors_enum[i][1]]
 
     # Color shifting RGB value (for start_animation)
-    def color_shift(self,val1,val2,step,i,dir):
+    def color_shift(self, val1, val2, step, i, dir):
         # Decreasing
         if dir == 0:
             return val1 - int(step*i*abs(val2-val1))
@@ -314,7 +368,7 @@ class gui:
             return val1 + int(step*i*abs(val2-val1))
 
     # Animating board piece in starting state
-    def start_animation(self,x):
+    def start_animation(self, x):
         # Background color
         for i in range(0,self.n_board):
             for j in range(0,self.n_board):
@@ -349,7 +403,7 @@ class gui:
 
     # Timer
     def reset_timer(self):
-        self.timer_time = 10000     # in millisecond
+        self.timer_time = 5000     # in millisecond
         self.clock.get_rawtime()
 
     def tick_timer(self):
@@ -395,12 +449,11 @@ class gui:
     def update_score(self):
         # Dummy score
         if self.dark_mode:
-            self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT2'])), dest=(210,280))
+            self.screen.blit(self.font_score.render('{} - {}'.format(self.score[0], self.score[1]),True,(colors['TEXT2'])), dest=(210,280))
         else:
-            self.screen.blit(self.font_score.render('0 - 0',True,(colors['TEXT'])), dest=(210,280))
+            self.screen.blit(self.font_score.render('{} - {}'.format(self.score[0], self.score[1]),True,(colors['TEXT'])), dest=(210,280))
 
-    # History display
-    # Order: latest on top
+    # History display (latest on top)
     def update_history(self):
         n = 4   # History size
         move_hist = self.move_history.copy()
@@ -416,24 +469,23 @@ class gui:
                 move_type = 'BERHENTI'
 
             # Player 1 move
-            if self.move_history[i][0] == 1:
-                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,(self.get_color(self.color_picked[1]))), dest=(35, 510 + i*40))
-            elif self.move_history[i][0] == 0:
-                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,(self.get_color(self.color_picked[2]))), dest=(35, 510 + i*40))
+            if move_hist[i][0] == 0:
+                self.screen.blit(self.font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,
+                                    (self.get_color(self.color_picked[move_hist[i][0]] + 1))), dest=(35, 510 + i*40))
 
     # (helper) Get object by 'nama' attribute
-    def get_object(self,p_nama):
-        if p01.nama == p_nama:
+    def get_object(self, p):
+        if p == 1:
             return p01
-        elif p02.nama == p_nama:
+        elif p == 2:
             return p02
-        elif p03.nama == p_nama:
+        elif p == 3:
             return p03
-        elif p04.nama == p_nama:
+        elif p == 4:
             return p04
 
     # (helper) Mouse coordinate in region (x0,y0: initial coordinate,  dx,dy: region dimension)
-    def in_region(self,a,x0,y0,dx,dy):
+    def in_region(self, a, x0, y0, dx, dy):
         return (x0 <= a[0] <= x0+dx and y0 <= a[1] <= y0+dy)
 
     # (helper) Mouse coordinate in region circle (x0,y0: initial coordinate,  d: region diameter)
@@ -444,7 +496,7 @@ class gui:
         return (dist <= d/2)
 
     # Interactive button hover/click
-    def update_button(self,action_start,action_reset):
+    def update_button(self):
         # Get mouse coordinate and click
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
@@ -454,21 +506,28 @@ class gui:
             self.screen.blit(self.button_active[0], dest=(35,120))
             if click[0] == 1:
                 print('[click start]')
-                action_start()
+                self.action_start()
 
         # Reset button
         if self.in_region(mouse,190,120,126,44):
             self.screen.blit(self.button_active[1], dest=(190,120))
             if click[0] == 1:
                 print('[click reset]')
-                action_reset()
+                self.action_reset()
+
+        # Pause button
+        if self.in_region(mouse,345,120,126,44):
+            self.screen.blit(self.button_active[2], dest=(345,120))
+            if click[0] == 1:
+                print('[click pause]')
+                self.action_pause()
 
         # Display in starting mode
         if self.starting:
             # 8x8 button
             if (self.in_region(mouse,35,230,92,50) or self.n_board == 8):
-                self.screen.blit(self.button_active[2], dest=(35,230))
-                if click[0] == 1:
+                self.screen.blit(self.button_active[3], dest=(35,230))
+                if click[0] == 1 and self.in_region(mouse,35,230,92,50):
                     self.n_board = 8
                     self.d = 75
                     self.x0 = 626
@@ -476,90 +535,60 @@ class gui:
 
             # 10x10 button
             if (self.in_region(mouse,140,230,104,50) or self.n_board == 10):
-                self.screen.blit(self.button_active[3], dest=(140,230))
-                if click[0] == 1:
+                self.screen.blit(self.button_active[4], dest=(140,230))
+                if click[0] == 1 and self.in_region(mouse,140,230,104,50):
                     self.n_board = 10
                     self.d = 60
                     self.x0 = 623
                     self.y0 = 63
+
+            # 2P button
+            if (self.in_region(mouse,280,230,67,50) or self.n_player == 2):
+                self.screen.blit(self.button_active[5], dest=(280,230))
+                if click[0] == 1 and self.in_region(mouse,280,230,67,50):
+                    self.n_player = 2
             
+            # 4P button
+            if (self.in_region(mouse,360,230,67,50) or self.n_player == 4):
+                self.screen.blit(self.button_active[6], dest=(360,230))
+                if click[0] == 1 and self.in_region(mouse,360,230,67,50):
+                    self.n_player = 4
+
             # Dark mode button
-            if self.in_region(mouse,35,310,208,50 or self.dark_mode == True):
-                self.screen.blit(self.button_active[4], dest=(35,310))
-                if click[0] == 1:
+            if (self.in_region(mouse,35,310,208,50) or self.dark_mode == True):
+                self.screen.blit(self.button_active[7], dest=(35,310))
+                if click[0] == 1 and self.in_region(mouse,35,310,208,50):
                     self.dark_mode = not self.dark_mode
                     time.sleep(0.2)
             
-            # AI Row 1 button
-            # P01
-            if self.in_region(mouse,180,445,69,50) or self.p1_selected == p01.nama:
-                self.screen.blit(self.button_ai_active[0], dest=(180,445))
-                if click[0] == 1:
-                    print(p01.nama,' selected as p1]')
-                    self.p1_selected = p01.nama
-            
-            # P02
-            if self.in_region(mouse,270,445,69,50) or self.p1_selected == p02.nama:
-                self.screen.blit(self.button_ai_active[1], dest=(270,445))
-                if click[0] == 1:
-                    print(p02.nama,' selected as p1]')
-                    self.p1_selected = p02.nama
-            
-            # P03
-            if self.in_region(mouse,360,445,69,50) or self.p1_selected == p03.nama:
-                self.screen.blit(self.button_ai_active[2], dest=(360,445))
-                if click[0] == 1:
-                    print(p03.nama,' selected as p1]')
-                    self.p1_selected = p03.nama
-            
-            # P04
-            if self.in_region(mouse,450,445,69,50) or self.p1_selected == p04.nama:
-                self.screen.blit(self.button_ai_active[3], dest=(450,445))
-                if click[0] == 1:
-                    print(p04.nama,' selected as p1]')
-                    self.p1_selected = p04.nama
+            # AI picker
+            for i in range(4):
+                # Row 1
+                if self.in_region(mouse,180 + 90*i,445,69,50) or self.p1_selected == (i + 1):
+                    self.screen.blit(self.button_ai_active[i], dest=(180 + 90*i,445))
+                    if click[0] == 1 and self.in_region(mouse,180 + 90*i,445,69,50) and self.p1_selected != (i + 1):
+                        print('[{} selected as p1]'.format(self.get_object(i+1).nama))
+                        self.p1_selected = i + 1
+                
+                # Row 2
+                if self.in_region(mouse,180 + 90*i,565,69,50) or self.p2_selected == (i + 1):
+                    self.screen.blit(self.button_ai_active[i], dest=(180 + 90*i,565))
+                    if click[0] == 1 and self.in_region(mouse,180 + 90*i,565,69,50) and self.p2_selected != (i + 1):
+                        print('[{} selected as p2]'.format(self.get_object(i+1).nama))
+                        self.p2_selected = i + 1
 
-            # AI Row 2 button
-            # P01
-            if self.in_region(mouse,180,565,69,50) or self.p2_selected == p01.nama:
-                self.screen.blit(self.button_ai_active[0], dest=(180,565))
-                if click[0] == 1:
-                    print(p01.nama,' selected as p2]')
-                    self.p2_selected = p01.nama
-            
-            # P02
-            if self.in_region(mouse,270,565,69,50) or self.p2_selected == p02.nama:
-                self.screen.blit(self.button_ai_active[1], dest=(270,565))
-                if click[0] == 1:
-                    print(p02.nama,' selected as p2]')
-                    self.p2_selected = p02.nama
-            
-            # P03
-            if self.in_region(mouse,360,565,69,50) or self.p2_selected == p03.nama:
-                self.screen.blit(self.button_ai_active[2], dest=(360,565))
-                if click[0] == 1:
-                    print(p03.nama,' selected as p2]')
-                    self.p2_selected = p03.nama
-            
-            # P04
-            if self.in_region(mouse,450,565,69,50) or self.p2_selected == p04.nama:
-                self.screen.blit(self.button_ai_active[3], dest=(450,565))
-                if click[0] == 1:
-                    print(p04.nama,' selected as p2]')
-                    self.p2_selected = p04.nama
-            
             # Color picker
             for i in range(0,8):
                 # Player 1
-                if self.in_region_circle(mouse,180 + 44*i,500,30) or i == self.color_picked[1]:
+                if self.in_region_circle(mouse,180 + 44*i,500,30) or i == self.color_picked[1] or i == self.color_picked[3]:
                     self.screen.blit(self.cp_selected, dest=(180 + 44*i,500))
-                    if click[0] == 1:
+                    if click[0] == 1 and self.in_region_circle(mouse,180 + 44*i,500,30):
                         self.color_picked[1] = i
                 
                 # Player 2
-                if self.in_region_circle(mouse,180 + 44*i,620,30) or i == self.color_picked[2]:
+                if self.in_region_circle(mouse,180 + 44*i,620,30) or i == self.color_picked[2] or i == self.color_picked[4]:
                     self.screen.blit(self.cp_selected, dest=(180 + 44*i,620))
-                    if click[0] == 1:
+                    if click[0] == 1 and self.in_region_circle(mouse,180 + 44*i,500,30):
                         self.color_picked[2] = i
                 
 
@@ -577,11 +606,15 @@ class gui:
     def action_reset(self):
         self.click_reset = True
 
+    # Pause button clicked
+    def action_pause(self):
+        self.click_pause = True
+
     # Update all screen element (board,piece,info,button,fps)
     def update_screen(self):
-        print('[update_screen loop]')
+        #print('[update_screen loop]')
         self.load_template(numbered=True)
-        self.update_button(self.action_start, self.action_reset)
+        self.update_button()
         self.load_pieces(self.model.getPapan())
         self.update_player()
         self.update_score()
@@ -608,7 +641,7 @@ class gui:
             x = self.xi // 50
             
             self.load_template(numbered=True)
-            self.update_button(self.action_start, self.action_reset)
+            self.update_button()
             self.start_animation(x)
             self.update_fps()
             pygame.display.update()
@@ -627,9 +660,9 @@ class gui:
                 self.starting = False
                 self.runningState = True
                 
-                # Start game with AI selected
+                # Start game with AI selected (reinitialize model)
                 self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
-                break
+                # break
                 
             if self.click_reset:    # Pretty useless?
                 print('[RESET clicked]')
@@ -650,6 +683,8 @@ class gui:
             self.model.mainMulai()
             p = self.model.getPemain(self.model.getGiliran())   # get current pemain ?
             final_pos, initial_pos, action = p.main(self.model)
+            self.move_count += 1
+            print('[move count] ',self.move_count)
             selesai = self.model.getWaktu()
             time_exec = self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu()
 
@@ -672,13 +707,36 @@ class gui:
 
             # Termination
             if self.model.akhir():
-                self.runningState = False
+                #self.runningState = False
+
+                pieces = self.model.getPosisiBidak(0)
+
+                k = 0
+                for piece in pieces:
+                    if self.model.dalamTujuan(0,piece[0],piece[1]):
+                        k += 1
+                if k == 15:
+                    print('[P1 Menang!]')
+                    self.score[0] += 1
+                else:
+                    print('[P2 Menang!]')
+                    self.score[1] += 1
+
+                modelState = self.model.S_OK
+
+                # Reinitialize halma model
+                self.reinit_model(self.p1_initial,self.p2_initial)
+
+                # Revert state (recursively call main method)
+                self.starting = True
+                self.main()
             modelState = self.model.ganti(selesai)
             self.reset_timer()
 
 
             # Update screen frame on current state
             self.update_screen()
+            #time.sleep(5)
 
             # Reset button
             if self.click_reset:
@@ -692,86 +750,16 @@ class gui:
                 self.starting = True
                 self.runningState = False
                 self.main()
-                break
+                # break
                 
             # Quit event (work to do: get and process all event from GUI)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.runningState = False
 
-
-######################################
-### ------ WORK ON PROGRESS ------ ###
-######################################
-
-    def move_ai(self, model, selesai):
-        # AI move
-        model.mainMulai()
-        p = model.getPemain(model.getGiliran())   # get current pemain ?
-        final_pos, initial_pos, action = p.main(model)
-        selesai = model.getWaktu()
-        time_exec = model.getJatahWaktu(model.getGiliran()) - self.model.getSisaWaktu()
-
-    # !!! Work on progress to utilize multiprocessing for continuous timer while AI is calculating
-    def main2(self):
-        # Starting condition
-        self.reset_timer()
-        self.update_screen()
-        modelState = self.model.S_OK
-
-        process_gui = multiprocessing.Process(target=self.update_screen, daemon=True)
-        process_gui.start()
-
-        # Game loop (1 round)
-        while self.runningState and modelState == self.model.S_OK:
-            # Frame and loop timing
-            self.clock.tick_busy_loop(75)
-            self.tick_timer()
-
-
-            # AI move
-            self.model.mainMulai()
-            p = self.model.getPemain(self.model.getGiliran())   # get current pemain ?
-            final_pos, initial_pos, action = p.main(self.model)
-            selesai = self.model.getWaktu()
-            time_exec = self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu()
-
-            # Insert to move history (4 last move)
-            self.move_history.append([self.model.getGiliran(), initial_pos, final_pos[0], action, time_exec])
-            if len(self.move_history) > 4:
-                self.move_history = self.move_history[-4:]
-            print('[move] {} {} {}'.format(initial_pos, final_pos[0], action))
-            print('[exec time] {}'.format(time_exec))
-            
-            # Type of action
-            if action == self.model.A_LONCAT:
-                print('[action: loncat]')
-                for xy in final_pos:
-                    modelState = self.model.mainLoncat(initial_pos[0], initial_pos[1], xy[0], xy[1])
-            elif action == self.model.A_GESER:
-                print('[action: geser]')
-                valid = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
-
-
-            # Termination
-            if self.model.akhir():
-                self.runningState = False
-            modelState = self.model.ganti(selesai)
-            self.reset_timer()
-            
-            # Update screen frame on current state
-            self.update_screen()
-
-
-            # Quit event (work to do: get and process all event from GUI)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.runningState = False
-            
-
 # Execute if invoked directly from script
 if __name__ == "__main__":
-    # Initial value 10x10 with player1 is p01 and player 2 is p02 (changeable in starting state)
-    g = gui(n_board=10, p1=p02, p2=p04)
+    # Initial value 10x10 with player1 is p03 and player 2 is p04 (changeable in starting state)
+    g = gui(n_board=10, p1=p03, p2=p04)
     g.main()
     pygame.quit()
