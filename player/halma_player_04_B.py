@@ -618,7 +618,7 @@ class HalmaPlayer04B(HalmaPlayer):
                 final = self.calc_path(board, initial, target)
                 print(final)
 
-                if (abs(final[1][0] - initial[0]) + abs(final[1][1] - initial[1])) > 2:
+                if (abs(final[1][0] - initial[0]) ** 2 + abs(final[1][1] - initial[1]) ** 2) > 2:
                     return [final[1]], initial, 1
                 else:
                     return [final[1]], initial, 0
