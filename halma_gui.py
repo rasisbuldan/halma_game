@@ -126,6 +126,7 @@ class gui:
     score = [0,0]
     color_click = [0,False,False]
     color_picked = [0,0,0,0,0]
+    times_up = False
 
 
     # Initialization
@@ -258,7 +259,7 @@ class gui:
         self.font_move_history      =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
         self.font_piece             =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
         self.font_score             =  pygame.font.Font('assets/fonts/coolvetica.ttf', 85)
-        self.font_warning           =  pygame.font.Font('assets/fonts/coolvetica.ttf', 26)
+        self.font_warning           =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
 
 
     def reinit_model(self,p1,p2):
@@ -394,7 +395,7 @@ class gui:
                     self.draw_piece(str(piece_id), self.color_picked[player_id], i, j)
 
 
-    def draw_piece(self, text, color, i, j):
+    def draw_piece(self, text, color, i, j, opacity=None):
         ''' 
         Draw custom text and color board piece into board coordinate i,j 
         
@@ -403,19 +404,33 @@ class gui:
         - color (int): enumeration of piece color (or colors_enum-6)
             - 0(blue), 1(cyan), 2(green), 3(orange), 4(pink), 5(purple), 6(red), 7(yellow)
         - i,j: coordinate to draw (in board index i(row), j(column))
+        - opacity (optional) (default=full): opacity in range 0-100 -> converted to alpha 0-255 (truncated)
         '''
 
         # Create text object
         textSurface = self.font_piece.render(text, True, (colors['WHITE']))
         textRect = textSurface.get_rect()
 
+        # Copy board piece object
+        if self.n_board == 10:
+            piece = self.piece_10[color].copy()
+        elif self.n_board == 8:
+            piece = self.piece_8[color].copy()
+
+        # Transparent
+        if opacity != None:
+            if self.n_board == 10:
+                piece = self.piece_10[color].copy()
+            elif self.n_board == 8:
+                piece = self.piece_8[color]
+            piece = self.piece_10[color].copy()
+            alpha = max(min((255 / 100) * opacity, 255),0)  # Ensure alpha value between 0-255
+            piece.fill((255,255,255,alpha), None, pygame.BLEND_RGBA_MULT)
+
         # Draw piece to screen
         if self.n_board == 10:
-            self.screen.blit(self.piece_10[color], dest=(self.x0 + j*self.d, self.y0 + i*self.d))
+            self.screen.blit(piece, dest=(self.x0 + j*self.d, self.y0 + i*self.d))
             textRect.center = (self.x0 + j*self.d + 27, self.y0 + i*self.d + 25)
-        elif self.n_board == 8:
-            self.screen.blit(self.piece_8[color], dest=(self.x0 + j*self.d, self.y0 + i*self.d))
-            textRect.center = (self.x0 + j*self.d + 32, self.y0 + i*self.d + 29)
 
         # Draw text to screen
         self.screen.blit(textSurface, textRect)
@@ -463,19 +478,48 @@ class gui:
                 for i in range(10):
                     for j in range(10):
                         if (self.in_region(mouse, (self.x0) + j*self.d, (self.y0) + i*self.d, self.d - 1, self.d - 1) 
-                                    and (self.model.bolehGeser(self.model.getGiliran(), *self.click_human1, i, j)
-                                    or self.model.bolehLoncat(self.model.getGiliran(), *self.click_human1, i, j))):
+                                            and ((i,j) in [m[-2] for m in self.model.get_all_moves(self.model.getGiliran() + 1) if m[0] == self.click_human1]
+                                            or self.model.getBidak(i,j) // 100 == self.model.getGiliran() + 1)):
                             if click[0] and not self.click_pmove:
                                 #print('[click]',i,j)
                                 self.click_pmove = True
                                 self.click_pmove_pos = (i,j)
-                                return [(i,j)]
+                                return (i,j)
                             elif not click[0]:
                                 self.click_pmove = False
                             self.screen.blit(self.piece_hover[1], dest=(self.x0 + j*self.d - 4, self.y0 + i*self.d - 4))
+
+
+    def update_possible_moves(self, p):
+        '''
+        Display all possible moves (intended for human playaer) with faded (60% opacity) in empty board spaces
+
+        Parameter:
+        - p: player id
+        '''
+
+        moves = []
+        board = self.model.getPapan()
+
+        # Filter duplicate final position
+        for move in self.model.get_all_moves(p):
+            if move[-2] not in [m[-1] for m in moves]:
+                if self.click_human1 != None:
+                    if move[0] == self.click_human1:
+                        moves.append(move[0:-1])
+                else:
+                    moves.append(move[0:-1])
+
         
-        #print('returning none')
-        #return None
+        displayed = []
+        # Display moves 
+        for move in moves:
+            piece_id = board[move[0][0]][move[0][1]] % 100
+
+            for m in move:
+                if m not in displayed:
+                    self.draw_piece('', self.color_picked[p], m[0], m[1], 40)
+                    displayed.append(m)
 
     
     def draw_line(self, initial, final, thick, p):
@@ -580,7 +624,7 @@ class gui:
     def reset_timer(self):
         ''' Set timer_time to initial value '''
 
-        self.timer_time = 5000     # in millisecond
+        self.timer_time = 20000     # in millisecond
         self.clock.get_rawtime()
 
 
@@ -594,8 +638,11 @@ class gui:
 
     def get_timer(self):
         ''' Get timer from model calculation '''
-        
-        return self.model.JATAH_WAKTU - (self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu())
+        time_left = self.model.JATAH_WAKTU - (self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu())
+        if time_left > 0:
+            return time_left
+        else:
+            return 0
     
 
     def update_timer(self):
@@ -610,7 +657,16 @@ class gui:
 
         p = self.model.getGiliran()
         stack = self.model.getJatahWaktu(p)
-        self.screen.blit(self.font_time_stack.render('({:.2f})'.format(stack), True, self.get_color(self.color_picked[p+1] + 6)), dest=(400,350))
+        time_left = self.model.JATAH_WAKTU - (self.model.getJatahWaktu(self.model.getGiliran()) - self.model.getSisaWaktu())
+        if time_left <= 0:
+            stack -= (0 - time_left)
+        
+        if stack < 0:
+            self.times_up = p + 1
+            self.winner = 2 - p
+            self.screen.blit(self.font_time_stack.render('(TIMES UP!)', True, self.get_color(self.color_picked[p+1] + 6)), dest=(420,355))
+        else:
+            self.screen.blit(self.font_time_stack.render('({:.2f})'.format(stack), True, self.get_color(self.color_picked[p+1] + 6)), dest=(420,355))
 
 
     def update_move_count(self):
@@ -671,7 +727,7 @@ class gui:
     def show_winner(self,p):
         ''' Show winner text '{team name} WIN!' after each round '''
 
-        self.screen.blit(self.font_warning.render(self.get_object(p)[0].nama[:-2] + ' WIN!', True, self.color_text), dest=(650,680))
+        self.screen.blit(self.font_warning.render(self.get_object(p)[0].nama[:-2] + ' WIN!', True, self.color_text), dest=(650,670))
 
 
     def get_object(self, p):
@@ -887,13 +943,13 @@ class gui:
         
         # Playing state only
         elif self.running:
-            self.update_move_line()
-            self.load_pieces(self.model.getPapan())
+            #self.update_move_line()
             if self.p.getType() == 'Human':
-                #self.update_hover()
+                self.update_possible_moves(self.p.nomor)
                 if self.click_human1 != None :
                     self.screen.blit(self.piece_hover[1], dest=(self.x0 + self.click_human1[1]*self.d - 4, 
                                                                 self.y0 + self.click_human1[0]*self.d - 4))
+            self.load_pieces(self.model.getPapan())
             self.update_player()
             self.update_score()
             self.update_timer()
@@ -902,7 +958,7 @@ class gui:
             self.update_history()
         
         # Round finished only
-        if self.finish:
+        if self.finish or self.times_up:
             self.show_winner(self.winner)
         
         pygame.display.update()
@@ -971,9 +1027,12 @@ class gui:
 
         # Human player
         elif self.p.getType() == 'Human':
+            print('Human moves!')
+            #print(*self.model.get_all_moves(self.p.nomor), sep='\n')
             self.click_human1 = None
             initial_pos = None
-            final_pos = None
+            final = None
+            click2 = None
 
             # Waiting for initial position click
             self.click_mode = 'piece'
@@ -986,19 +1045,27 @@ class gui:
             
             # Waiting for final position click
             self.click_mode = 'target'
-            while final_pos == None:
+            while final == None:
                 self.tick_timer()
                 self.update_screen()
-                final_pos = self.update_hover()
+                click2 = self.update_hover()
+                if click2 != None:
+                    if self.model.is_board_piece(click2):
+                        initial_pos = click2
+                        self.click_human1 = initial_pos
+                    else:
+                        final = click2
                 pygame.display.update()
-            
-            #print(abs(final_pos[0][0] - initial_pos[0]) ** 2 + abs(final_pos[0][1] - initial_pos[1]) ** 2)
-            if (abs(final_pos[0][0] - initial_pos[0]) ** 2 + abs(final_pos[0][1] - initial_pos[1]) ** 2) > 2:
+
+            # Determine type of action
+            if (abs(final[0] - initial_pos[0]) ** 2 + abs(final[1] - initial_pos[1]) ** 2) > 2:
+                final_pos = self.model.calc_path_hop(initial_pos, final)[1:]
                 action = self.model.A_LONCAT
-            elif (abs(final_pos[0][0] - initial_pos[0]) ** 2 + abs(final_pos[0][1] - initial_pos[1]) ** 2) == 0:
-                action = self.model.A_BERHENTI
-            else:
+            elif (abs(final[0] - initial_pos[0]) ** 2 + abs(final[1] - initial_pos[1]) ** 2) > 0:
+                final_pos = [final]
                 action = self.model.A_GESER
+            else:
+                action = self.model.BERHENTI
             
         self.move_count += 1
         return initial_pos, final_pos, action
@@ -1013,30 +1080,42 @@ class gui:
 
         # 2-Player
         if self.n_player == 2:
-            if self.model.akhir():
+            if self.model.akhir() or self.times_up:
                 pieces = self.model.getPosisiBidak(0)
                 self.finish = True
                 
-                # Count pieces
-                k = 0
-                for piece in pieces:
-                    if self.model.dalamTujuan(0,piece[0],piece[1]):
-                        k += 1
-                if k == 15:
+                if self.times_up == 1:
+                    print('[P2 Menang!]')
+                    self.show_winner(self.p2_selected)
+                    self.score[1] += 1
+                    self.winner = self.p2_selected
+                elif self.times_up == 2:
                     print('[P1 Menang!]')
                     self.show_winner(self.p1_selected)
                     self.score[0] += 1
                     self.winner = self.p1_selected
                 else:
-                    print('[P2 Menang!]')
-                    self.show_winner(self.p2_selected)
-                    self.score[1] += 1
-                    self.winner = self.p2_selected
+                    # Count pieces
+                    k = 0
+                    for piece in pieces:
+                        if self.model.dalamTujuan(0,piece[0],piece[1]):
+                            k += 1
+                    if k == 15:
+                        print('[P1 Menang!]')
+                        self.show_winner(self.p1_selected)
+                        self.score[0] += 1
+                        self.winner = self.p1_selected
+                    else:
+                        print('[P2 Menang!]')
+                        self.show_winner(self.p2_selected)
+                        self.score[1] += 1
+                        self.winner = self.p2_selected
                 
                 # Waiting for start button press
+                self.times_up = False
                 self.click_start = False
                 while not self.click_start:
-                    self.update_button()
+                    self.update_screen()
 
                 # Reinitialize halma model (next round)
                 modelState = self.model.S_OK
@@ -1144,7 +1223,6 @@ class gui:
 
             # Reset button clicked
             if self.click_reset:
-                #print('[RESET clicked]')
                 self.click_reset = False
 
                 # Reinitialize halma model

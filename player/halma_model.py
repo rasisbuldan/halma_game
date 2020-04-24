@@ -43,7 +43,7 @@ class HalmaModel:
 
     ARAH = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
 
-    JATAH_WAKTU = 5.0
+    JATAH_WAKTU = 10.0
 
     # Private variable
     __papan = []   
@@ -146,6 +146,9 @@ class HalmaModel:
 
     def getJatahWaktu(self, ip):
         return self.__waktu[ip]
+    
+    def setJatahWaktu(self, ip, delta):
+        self.__waktu[ip] += delta
 
     def getSisaWaktu(self):
         ip = self.__giliran
@@ -172,10 +175,6 @@ class HalmaModel:
             return False
         if (self.__papan[x2][y2] != 0):
             return False
-        dAsal = self.dalamTujuan(ip, x1, y1)
-        dTujuan = self.dalamTujuan(ip, x2, y2)
-        if (dAsal and not dTujuan):
-            return False
         for a in self.ARAH:
             x21 = x1 + a[0]
             y21 = y1 + a[1]
@@ -188,10 +187,6 @@ class HalmaModel:
         if not self.dalamPapan(x2, y2):
             return False
         if (self.__papan[x2][y2] != 0):
-            return False
-        dAsal = self.dalamTujuan(ip, x1, y1)
-        dTujuan = self.dalamTujuan(ip, x2, y2)
-        if (dAsal and not dTujuan):
             return False
         for a in self.ARAH:
             x21 = x1 + a[0] + a[0]
@@ -271,5 +266,272 @@ class HalmaModel:
                 return False
                 
         return True
+
+    '''
+        Added function
+    '''
+
+    def is_valid(self, pos):
+        return ((0 <= pos[0] < 10) and (0 <= pos[1] < 10))
     
+
+    def is_empty(self, pos):
+        return self.__papan[pos[0]][pos[1]] == 0
+
+
+    def is_board_piece(self, pos):
+        return self.__papan[pos[0]][pos[1]] // 100
+
+
+    # Get all board pieces position of player_id (list of position)
+    def get_board_pieces(self, player_id):
+        pieces = []
+
+        # Board traversal
+        for i in range(0,10):
+            for j in range(0,10):
+                if self.is_board_piece((i,j)) == player_id:
+                    pieces.append((i,j))
+        return pieces
     
+
+    def get_loncat_multi(self, pos, player_id):
+    
+        # Helper
+        def get_loncat(pos):
+            loncat = []
+
+            # Explore all move direction
+            for move in self.ARAH:
+                x1 = pos[0] + move[0]
+                y1 = pos[1] + move[1]
+                x2 = pos[0] + (2 * move[0])
+                y2 = pos[1] + (2 * move[1])
+                
+                # Check if can hop and add to list
+                if self.is_valid((x2,y2)):
+                    if self.is_board_piece((x1,y1)) and self.is_empty((x2,y2)):
+                        loncat.append((x2,y2))
+            
+            return loncat
+
+        # Main
+        hopped = []
+        path = []
+        path_queue = [[pos]]
+
+        while path_queue != []:
+            current_path = path_queue.pop(0)
+            current_node = current_path[-1]
+            hopped.append(current_node)
+
+            hopping_child = get_loncat(current_node)
+            h_num = 0
+            for h_child in hopping_child:
+                if h_child not in hopped:
+                    hopped.append(h_child)
+                    path_queue.append(current_path + [h_child])
+                    h_num += 1
+
+            if h_num == 0:
+                path.append(current_path)
+
+        # return [[(x2,y2),(x3,y3)],[(x2,y2),(x3,y3),(x4,y4)],...]
+        return path
+
+
+    # Get all hop possibilities for each board piece in node object
+    def get_all_loncat(self, player_id):
+        loncat_all = []
+        pieces = self.get_board_pieces(player_id)
+
+        # Explore all pieces
+        for piece in pieces:
+            # Get hop list for piece
+            hop_list = []
+            for h in self.get_loncat_multi(piece, player_id):
+                for n in range(1,len(h)):
+                    h_buf = h[1:n+1]
+                    if h_buf not in hop_list:
+                        hop_list.append(h_buf)
+            
+            if hop_list != [[]]:
+                loncat_all.append([piece,hop_list])
+        
+        return loncat_all
+    
+
+    # Get all geser possibilities for each board piece in node object
+    def get_all_geser(self, player_id):
+        geser = []
+        pieces = self.get_board_pieces(player_id)
+        for piece in pieces:
+            geser_buf = []
+            for move in self.ARAH:
+                x1 = piece[0] + move[0]
+                y1 = piece[1] + move[1]
+                
+                if self.is_valid((x1,y1)) and self.is_empty((x1,y1)):
+                    geser_buf.append((x1,y1))
+
+            geser.append([piece,geser_buf])
+        
+        return geser
+
+
+    # Get all moves (return list hop,geser)
+    def get_all_moves(self, player_id):
+        moves = []
+
+        # Hop
+        moves_hop = self.get_all_loncat(player_id)
+        for piece_hop in range(len(moves_hop)):
+            for move in moves_hop[piece_hop][1]:
+                moves.append([moves_hop[piece_hop][0]] + move + ['1'])
+        
+        # Geser
+        moves_geser = self.get_all_geser(player_id)
+        for piece_geser in range(len(moves_geser)):
+            for move in moves_geser[piece_geser][1]:
+                moves.append([moves_geser[piece_geser][0]] + [move] + ['0'])
+        
+        #print('get_all_moves',moves)
+        return moves
+
+
+    # Calculate path from initial to final position using a-star search
+    def calc_path_hop(self, initial, final):
+        def is_valid(pos):
+            return (0 <= pos[0] < 10 and 0 <= pos[1] < 10)
+
+        def is_board_piece(pos):
+            return (self.__papan[pos[0]][pos[1]] != 0)
+
+        print('Calculating path from {} to {}...'.format(initial, final))
+
+        # Initial and final node
+        initial_node = Node(None, initial)
+        initial_node.set_heur(0,0,0)
+        final_node = Node(None, final)
+        final_node.set_heur(0,0,0)
+
+        # List initialization (visit: to be visited)
+        visit = []
+        visit.append(initial_node)
+        visited = []
+
+        # Search loop (while there is node to be visited)
+        while len(visit) > 0:
+
+            # Select node with minimal f value of visit list
+            current_node = visit[0]
+            current_id = 0
+            for index, node in enumerate(visit):
+                if node.f < current_node.f:
+                    current_node = node
+                    current_id = index
+
+            # Add visited current node to visited list
+            visit.pop(current_id)
+            visited.append(current_node)
+
+            # If current node is final target
+            if current_node.equal(final_node):
+                path = []
+                current = current_node
+                
+                # Backtracing parent position of node to initial position
+                while current is not None:
+                    path.append(current.pos)
+                    current = current.parent
+                
+                # Return reversed path (from initial to final)
+                return path[::-1]
+            
+            # Generate node children
+            children = []
+            move_possibilities = [(0,-1),(0,1),(-1,0),(1,0),(-1,-1),(-1,1),(1,-1),(1,1)]
+            for move in move_possibilities:
+                
+                # Get next node position
+                node_next_pos = (current_node.pos[0] + move[0], current_node.pos[1] + move[1])
+
+                # Node position out of board index
+                if not is_valid(node_next_pos):
+                    continue
+                
+                # Next node position is board piece
+                if is_board_piece(node_next_pos):
+                    next2 = (node_next_pos[0] + move[0], node_next_pos[1] + move[1])
+
+                    # Check if hop target is valid index for board
+                    if is_valid(next2):
+
+                        # Hop
+                        if self.is_empty(next2):
+                            node_next_pos = next2
+                            
+                            # Create new node
+                            new_node = Node(current_node, node_next_pos)
+                            children.append(new_node)
+                    
+                        else:
+                            continue
+                    
+                    else:
+                        continue
+                    
+                
+
+            # Loop through node parent's children
+            for child in children:
+
+                # Child already on visited
+                already = False
+                for v in visited:
+                    if child.equal(v):
+                        already = True
+                if already:
+                    continue
+                
+                # Calculate A* parameter values (f,g,h)
+                g = current_node.g + 1
+                h = ((child.pos[0] - final_node.pos[0]) ** 2) + ((child.pos[1] - final_node.pos[1]) ** 2)
+                child.set_heur(g + h, g, h)
+
+                # Child already on visit
+                already = False
+                for v in visit:
+                    if child.equal(v) and child.g > v.g:
+                        already = True
+                if already:
+                    continue
+                
+                # Add child to visit list
+                visit.append(child)
+
+# Supporting Class
+class Node():
+    parent = 0
+    pos = 0
+
+    # Node definition
+    def __init__(self, parent=None, pos=None):
+        self.parent = parent
+        self.pos = pos
+
+        # Heuristic value
+        self.f = 0
+        self.g = 0
+        self.h = 0
+    
+    # Set heuristic value for node
+    def set_heur(self, f, g, h):
+        # f = g + h
+        self.f = f
+        self.g = g
+        self.h = h
+
+    # Check node position equality (boolean)
+    def equal(self, other):
+        return self.pos == other.pos
