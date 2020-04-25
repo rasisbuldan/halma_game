@@ -10,8 +10,9 @@ import time
 from halma_model import HalmaModel
 
 class HalmaPlayer:
-    nama = "Pemain"
-    deskripsi = "Random Strategy"
+    nama = 'Pemain'
+    deskripsi = 'Random Strategy'
+    type = 'AI'
     nomor = 1    
     index = 0
     papan = []
@@ -26,6 +27,12 @@ class HalmaPlayer:
     
     def setTeman(self, p):
         self.teman = p
+    
+    def getTeman(self):
+        return self.teman
+    
+    def getType(self):
+        return self.type
 
     # mengembalikan semua kemungkikan main (geser / loncat) bidak di (x1, y1)
     def bisaMain(self, model, papan, x1, y1):

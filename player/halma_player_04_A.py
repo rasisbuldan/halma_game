@@ -16,6 +16,7 @@ To do:
     - move dir for 4 player
     - add move history constraint
     - mid lane control
+    - a* search piece-blockade error
 """
 
 import random
@@ -36,12 +37,13 @@ class HalmaStateNode:
         self.current = [row[:] for row in current]      # 2-D array deepcopy
         self.move = move
         self.turn = turn
+        #print(move)
 
         # Run move [(x0,y0),(x1,y1),1]
         #print(*self.current, sep='\n')
         #print('move: ', move)
         if move != None:
-            self.current[move[1][0]][move[1][1]] = self.current[move[0][0]][move[0][1]]
+            self.current[move[-2][0]][move[-2][1]] = self.current[move[0][0]][move[0][1]]
             self.current[move[0][0]][move[0][1]] = 0
         #print(*self.current, sep='\n')
 
@@ -132,7 +134,7 @@ class HalmaStateNode:
 
         for i in range (0,10):
             for j in range(0,10):
-                if self.in_target_zone((i,j),player_id) and self.is_empty((i,j)):
+                if self.in_target_zone((i,j),player_id) and (self.is_empty((i,j)) or self.is_board_piece((i,j)) != player_id):
                     empty_target.append((i,j))
         
         return empty_target
@@ -339,9 +341,9 @@ class HalmaStateNode:
                     dist_val += self.calc_dist_normalized(piece, *self.get_dist_reference(turn_id))
                 
                 # Pieces total distance to target zone
-                eval_value += (weight['dist-target'] * (dist_val / 10))
+                eval_value += (weight['dist-target'] * (dist_val / 15))
                 # Pieces count in target zone
-                eval_value += (weight['count-target'] * (self.count_in_target(turn_id) / 10))
+                eval_value += (weight['count-target'] * (self.count_in_target(turn_id) / 15))
                 
                 # Pieces count in base zone
                 #eval_value -= (weight['count-base'] * (self.count_in_base(turn_id) / 10))
@@ -351,7 +353,7 @@ class HalmaStateNode:
                                                                 #*self.get_dist_reference(turn_id)))\
                 
                 # Hop count
-                eval_value += (weight['count-loncat'] * self.get_loncat_count(turn_id) / 50)
+                #eval_value += (weight['count-loncat'] * self.get_loncat_count(turn_id) / 50)
         
         # Save evaluation value to val attribute
         #print('~~ [eval_value]',self.move,'->',eval_value)
@@ -453,7 +455,7 @@ class HalmaPlayer04A(HalmaPlayer):
             
             # Generate node children
             children = []
-            move_possibilities = [(0,-1),(0,1),(-1,0),(1,0),(-1,-1),(-1,1),(1,-1),(1,1),(2,0),(0,2),(-2,0),(0,-2),(2,2),(2,-2),(-2,2),(-2,-2)]
+            move_possibilities = [(0,-1),(0,1),(-1,0),(1,0),(-1,-1),(-1,1),(1,-1),(1,1)]
             for move in move_possibilities:
                 
                 # Get next node position
@@ -582,13 +584,13 @@ class HalmaPlayer04A(HalmaPlayer):
         # AI parameter
         self.ply = 2
         self.time_limit = 3
-        self.late_treshold = 9
+        self.late_treshold = 14
         weight = {
             'dist-target': 0.5,
-            'count-target': 0.2,
+            'count-target': 0.3,
             'count-base': 0.15,
             'count-loncat': 0.05,
-            'furthest-loncat': 0.15
+            'furthest-loncat': 0.2
         }
 
         # Algorithm parameter
@@ -605,10 +607,10 @@ class HalmaPlayer04A(HalmaPlayer):
 
         if not root_node.game_finished():
             # Late game
-            if root_node.count_in_target(self.nomor) >= 9:
+            if root_node.count_in_target(self.nomor) >= self.late_treshold:
 
-                print('!! [late game]', self.nomor)
-                print(*root_node.get_current(), sep='\n')
+                #print('!! [late game]', self.nomor)
+                #print(*root_node.get_current(), sep='\n')
                 initial = root_node.get_lost_piece(self.nomor)[0]
                 target = root_node.get_empty_target(self.nomor)[0]
                 board = root_node.get_current()
@@ -616,7 +618,10 @@ class HalmaPlayer04A(HalmaPlayer):
                 final = self.calc_path(board, initial, target)
                 print(final)
 
-                return [final[1]], initial, 0
+                if (abs(final[1][0] - initial[0]) ** 2 + abs(final[1][1] - initial[1]) ** 2) > 2:
+                    return [final[1]], initial, 1
+                else:
+                    return [final[1]], initial, 0
 
             
             # Early-mid game
