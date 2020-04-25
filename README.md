@@ -31,8 +31,8 @@ Font: Coolvetica (https://www.dafont.com/coolvetica.font)
 - PyPI package
 
 ## Screenshot
-Light Mode Starting Screen
-![Starting Light Mode](assets/screenshot/starting.png?raw=True)
+Dark Mode Starting Screen
+![Starting Light Mode](assets/screenshot/starting_dark.png?raw=True)
 
-Dark Mode Playing Screen
-![Playing Dark Mode](assets/screenshot/playing_dark.png?raw=True)
+Light Mode Playing Screen
+![Playing Dark Mode](assets/screenshot/playing.png?raw=True)
