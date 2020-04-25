@@ -25,5 +25,14 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    include_package_data=True
+    include_package_data=True,
+    data_files=[
+        ('gui', ['assets/gui/*.png']),
+        ('board', ['assets/board/*.png']),
+        ('button', ['assets/button/*.png']),
+        ('fonts', ['assets/fonts/*.ttf']),
+        ('info', ['assets/info/*.png']),
+        ('pieces', ['assets/pieces/*.png']),
+        ('screenshot', ['assets/screenshot/*.png'])
+    ]
 )
