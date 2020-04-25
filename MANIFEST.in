@@ -1,0 +1,2 @@
+recursive-include assets *.png
+recursive-include assets *.ttf

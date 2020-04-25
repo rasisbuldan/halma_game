@@ -40,7 +40,7 @@ import sys
 # Pygame initialization
 pygame.init()
 screen = pygame.display.set_mode((1280,720))    # Resolution set
-pygame.display.set_caption('Halma (Beta) v0.3.4')
+pygame.display.set_caption('Halma (Beta) v0.3.5')
 pygame.display.set_icon(pygame.image.load('assets/icon.png'))
 
 

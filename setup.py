@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="halma-game",
     package=['halma-game'],
-    version="0.3.4",
+    version="0.3.5",
     license='MIT',
     author="Rasis Syauqi Buldan",
     author_email="rasisbuldan@gmail.com",
@@ -14,7 +14,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rasisbuldan/halma_game",
-    download_url="https://github.com/rasisbuldan/halma_game/archive/v0.3.4.tar.gz",
+    download_url="https://github.com/rasisbuldan/halma_game/archive/v0.3.5.tar.gz",
     packages=setuptools.find_packages(),
     install_requires=[
         'pygame',
@@ -25,4 +25,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    include_package_data=True
 )
