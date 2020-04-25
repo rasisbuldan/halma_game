@@ -1,21 +1,23 @@
 # Halma Game
-
-Install from pip
+Clone this repository
 ```
-pip install halma-game
+git clone https://github.com/rasisbuldan/halma_game
 ```
 
 To run simply just execute in terminal/cmd:
 ```
-python -m halma-game
+python halma.py
 ```
 
 Prerequisite: pygame library
 Tested on pygame 1.9.6 (Python 3.7.6)
+```
+pip install pygame
+```
 
 Font: Coolvetica (https://www.dafont.com/coolvetica.font)
 
-
+Inserting custom AI, go to `halma_game/halma_player_XX_A/B.py` with API in function `main`
 
 ## Feature
 - Game configuration screen with board piece animation

@@ -76,99 +76,98 @@ colors_enum = list(enumerate(colors))
 
 # Assets Import
 path = os.path.dirname(__file__)
-print(path)
-pygame.display.set_icon(pygame.image.load(path + '/assets/gui/icon.png'))
+pygame.display.set_icon(pygame.image.load('halma_game/assets/gui/icon.png'))
 title = {
-    'light'             : pygame.image.load(path + '/assets/gui/title.png'),
-    'dark'              : pygame.image.load(path + '/assets/gui/title_dark.png')
+    'light'             : pygame.image.load('halma_game/assets/gui/title.png'),
+    'dark'              : pygame.image.load('halma_game/assets/gui/title_dark.png')
 }
 info_text = {
-    'turn'              : pygame.image.load(path + '/assets/info/info_turn.png'),
-    'score'             : pygame.image.load(path + '/assets/info/info_score.png'),
-    'time-left'         : pygame.image.load(path + '/assets/info/info_timeleft.png'),
-    'last-move'         : pygame.image.load(path + '/assets/info/info_lastmove.png')
+    'turn'              : pygame.image.load('halma_game/assets/info/info_turn.png'),
+    'score'             : pygame.image.load('halma_game/assets/info/info_score.png'),
+    'time-left'         : pygame.image.load('halma_game/assets/info/info_timeleft.png'),
+    'last-move'         : pygame.image.load('halma_game/assets/info/info_lastmove.png')
 }
 info_player = {
-    'p1'                : pygame.image.load(path + '/assets/info/info_p1.png'),
-    'p2'                : pygame.image.load(path + '/assets/info/info_p2.png')
+    'p1'                : pygame.image.load('halma_game/assets/info/info_p1.png'),
+    'p2'                : pygame.image.load('halma_game/assets/info/info_p2.png')
 }
 button = {                   
-    'start'             : pygame.image.load(path + '/assets/button/button_start.png'),
-    'start-active'      : pygame.image.load(path + '/assets/button/button_start_active.png'),
-    'reset'             : pygame.image.load(path + '/assets/button/button_reset.png'),
-    'reset-active'      : pygame.image.load(path + '/assets/button/button_reset_active.png'),
-    'pause'             : pygame.image.load(path + '/assets/button/button_pause.png'),
-    'pause-active'      : pygame.image.load(path + '/assets/button/button_pause_active.png'),
-    '8x8'               : pygame.image.load(path + '/assets/button/button_8x8.png'),
-    '8x8-active'        : pygame.image.load(path + '/assets/button/button_8x8_active.png'),
-    '10x10'             : pygame.image.load(path + '/assets/button/button_10x10.png'),
-    '10x10-active'      : pygame.image.load(path + '/assets/button/button_10x10_active.png'),
-    '2p'                : pygame.image.load(path + '/assets/button/button_2p.png'),
-    '2p-active'         : pygame.image.load(path + '/assets/button/button_2p_active.png'),
-    '4p'                : pygame.image.load(path + '/assets/button/button_4p.png'),
-    '4p-active'         : pygame.image.load(path + '/assets/button/button_4p_active.png'),
-    'dark'              : pygame.image.load(path + '/assets/button/button_dark.png'),
-    'dark-active'       : pygame.image.load(path + '/assets/button/button_dark_active.png')
+    'start'             : pygame.image.load('halma_game/assets/button/button_start.png'),
+    'start-active'      : pygame.image.load('halma_game/assets/button/button_start_active.png'),
+    'reset'             : pygame.image.load('halma_game/assets/button/button_reset.png'),
+    'reset-active'      : pygame.image.load('halma_game/assets/button/button_reset_active.png'),
+    'pause'             : pygame.image.load('halma_game/assets/button/button_pause.png'),
+    'pause-active'      : pygame.image.load('halma_game/assets/button/button_pause_active.png'),
+    '8x8'               : pygame.image.load('halma_game/assets/button/button_8x8.png'),
+    '8x8-active'        : pygame.image.load('halma_game/assets/button/button_8x8_active.png'),
+    '10x10'             : pygame.image.load('halma_game/assets/button/button_10x10.png'),
+    '10x10-active'      : pygame.image.load('halma_game/assets/button/button_10x10_active.png'),
+    '2p'                : pygame.image.load('halma_game/assets/button/button_2p.png'),
+    '2p-active'         : pygame.image.load('halma_game/assets/button/button_2p_active.png'),
+    '4p'                : pygame.image.load('halma_game/assets/button/button_4p.png'),
+    '4p-active'         : pygame.image.load('halma_game/assets/button/button_4p_active.png'),
+    'dark'              : pygame.image.load('halma_game/assets/button/button_dark.png'),
+    'dark-active'       : pygame.image.load('halma_game/assets/button/button_dark_active.png')
 }
 button_player = {
-    '01'                : pygame.image.load(path + '/assets/button/button_01.png'),
-    '01-active'         : pygame.image.load(path + '/assets/button/button_01_active.png'),
-    '02'                : pygame.image.load(path + '/assets/button/button_02.png'),
-    '02-active'         : pygame.image.load(path + '/assets/button/button_02_active.png'),
-    '03'                : pygame.image.load(path + '/assets/button/button_03.png'),
-    '03-active'         : pygame.image.load(path + '/assets/button/button_03_active.png'),
-    '04'                : pygame.image.load(path + '/assets/button/button_04.png'),
-    '04-active'         : pygame.image.load(path + '/assets/button/button_04_active.png'),
-    'Human'             : pygame.image.load(path + '/assets/button/button_human.png'),
-    'Human-active'      : pygame.image.load(path + '/assets/button/button_human_active.png')
+    '01'                : pygame.image.load('halma_game/assets/button/button_01.png'),
+    '01-active'         : pygame.image.load('halma_game/assets/button/button_01_active.png'),
+    '02'                : pygame.image.load('halma_game/assets/button/button_02.png'),
+    '02-active'         : pygame.image.load('halma_game/assets/button/button_02_active.png'),
+    '03'                : pygame.image.load('halma_game/assets/button/button_03.png'),
+    '03-active'         : pygame.image.load('halma_game/assets/button/button_03_active.png'),
+    '04'                : pygame.image.load('halma_game/assets/button/button_04.png'),
+    '04-active'         : pygame.image.load('halma_game/assets/button/button_04_active.png'),
+    'Human'             : pygame.image.load('halma_game/assets/button/button_human.png'),
+    'Human-active'      : pygame.image.load('halma_game/assets/button/button_human_active.png')
 }
 board_8 = {
-    'not-numbered-light': pygame.image.load(path + '/assets/board/board_8.png'),
-    'not-numbered-dark' : pygame.image.load(path + '/assets/board/board_8_dark.png'),
-    'numbered-light'    : pygame.image.load(path + '/assets/board/board_8_numbered.png'),
-    'numbered-dark'     : pygame.image.load(path + '/assets/board/board_8_numbered_dark.png')
+    'not-numbered-light': pygame.image.load('halma_game/assets/board/board_8.png'),
+    'not-numbered-dark' : pygame.image.load('halma_game/assets/board/board_8_dark.png'),
+    'numbered-light'    : pygame.image.load('halma_game/assets/board/board_8_numbered.png'),
+    'numbered-dark'     : pygame.image.load('halma_game/assets/board/board_8_numbered_dark.png')
 }
 board_10 = {
-    'not-numbered-light': pygame.image.load(path + '/assets/board/board_10.png'),
-    'not-numbered-dark' : pygame.image.load(path + '/assets/board/board_10_dark.png'),
-    'numbered-light'    : pygame.image.load(path + '/assets/board/board_10_numbered.png'),
-    'numbered-dark'     : pygame.image.load(path + '/assets/board/board_10_numbered_dark.png')
+    'not-numbered-light': pygame.image.load('halma_game/assets/board/board_10.png'),
+    'not-numbered-dark' : pygame.image.load('halma_game/assets/board/board_10_dark.png'),
+    'numbered-light'    : pygame.image.load('halma_game/assets/board/board_10_numbered.png'),
+    'numbered-dark'     : pygame.image.load('halma_game/assets/board/board_10_numbered_dark.png')
 }
 piece_8 = {
-    'blue'              : pygame.image.load(path + '/assets/pieces/8x8_blue.png'),
-    'cyan'              : pygame.image.load(path + '/assets/pieces/8x8_cyan.png'),
-    'green'             : pygame.image.load(path + '/assets/pieces/8x8_green.png'),
-    'orange'            : pygame.image.load(path + '/assets/pieces/8x8_orange.png'),
-    'pink'              : pygame.image.load(path + '/assets/pieces/8x8_pink.png'),
-    'purple'            : pygame.image.load(path + '/assets/pieces/8x8_purple.png'),
-    'red'               : pygame.image.load(path + '/assets/pieces/8x8_red.png'),
-    'yellow'            : pygame.image.load(path + '/assets/pieces/8x8_yellow.png')
+    'blue'              : pygame.image.load('halma_game/assets/pieces/8x8_blue.png'),
+    'cyan'              : pygame.image.load('halma_game/assets/pieces/8x8_cyan.png'),
+    'green'             : pygame.image.load('halma_game/assets/pieces/8x8_green.png'),
+    'orange'            : pygame.image.load('halma_game/assets/pieces/8x8_orange.png'),
+    'pink'              : pygame.image.load('halma_game/assets/pieces/8x8_pink.png'),
+    'purple'            : pygame.image.load('halma_game/assets/pieces/8x8_purple.png'),
+    'red'               : pygame.image.load('halma_game/assets/pieces/8x8_red.png'),
+    'yellow'            : pygame.image.load('halma_game/assets/pieces/8x8_yellow.png')
 }
 piece_10 = {
-    'blue'              : pygame.image.load(path + '/assets/pieces/10x10_blue.png'),
-    'cyan'              : pygame.image.load(path + '/assets/pieces/10x10_cyan.png'),
-    'green'             : pygame.image.load(path + '/assets/pieces/10x10_green.png'),
-    'orange'            : pygame.image.load(path + '/assets/pieces/10x10_orange.png'),
-    'pink'              : pygame.image.load(path + '/assets/pieces/10x10_pink.png'),
-    'purple'            : pygame.image.load(path + '/assets/pieces/10x10_purple.png'),
-    'red'               : pygame.image.load(path + '/assets/pieces/10x10_red.png'),
-    'yellow'            : pygame.image.load(path + '/assets/pieces/10x10_yellow.png')
+    'blue'              : pygame.image.load('halma_game/assets/pieces/10x10_blue.png'),
+    'cyan'              : pygame.image.load('halma_game/assets/pieces/10x10_cyan.png'),
+    'green'             : pygame.image.load('halma_game/assets/pieces/10x10_green.png'),
+    'orange'            : pygame.image.load('halma_game/assets/pieces/10x10_orange.png'),
+    'pink'              : pygame.image.load('halma_game/assets/pieces/10x10_pink.png'),
+    'purple'            : pygame.image.load('halma_game/assets/pieces/10x10_purple.png'),
+    'red'               : pygame.image.load('halma_game/assets/pieces/10x10_red.png'),
+    'yellow'            : pygame.image.load('halma_game/assets/pieces/10x10_yellow.png')
 }
 piece_hover = {
-    '8x8'               : pygame.image.load(path + '/assets/pieces/8x8_hover.png'),
-    '10x10'             : pygame.image.load(path + '/assets/pieces/10x10_hover.png')
+    '8x8'               : pygame.image.load('halma_game/assets/pieces/8x8_hover.png'),
+    '10x10'             : pygame.image.load('halma_game/assets/pieces/10x10_hover.png')
 }
 color_picker = {
-    'blue'              : pygame.image.load(path + '/assets/pieces/cp_blue.png'),
-    'cyan'              : pygame.image.load(path + '/assets/pieces/cp_cyan.png'),
-    'green'             : pygame.image.load(path + '/assets/pieces/cp_green.png'),
-    'orange'            : pygame.image.load(path + '/assets/pieces/cp_orange.png'),
-    'pink'              : pygame.image.load(path + '/assets/pieces/cp_pink.png'),
-    'purple'            : pygame.image.load(path + '/assets/pieces/cp_purple.png'),
-    'red'               : pygame.image.load(path + '/assets/pieces/cp_red.png'),
-    'yellow'            : pygame.image.load(path + '/assets/pieces/cp_yellow.png')
+    'blue'              : pygame.image.load('halma_game/assets/pieces/cp_blue.png'),
+    'cyan'              : pygame.image.load('halma_game/assets/pieces/cp_cyan.png'),
+    'green'             : pygame.image.load('halma_game/assets/pieces/cp_green.png'),
+    'orange'            : pygame.image.load('halma_game/assets/pieces/cp_orange.png'),
+    'pink'              : pygame.image.load('halma_game/assets/pieces/cp_pink.png'),
+    'purple'            : pygame.image.load('halma_game/assets/pieces/cp_purple.png'),
+    'red'               : pygame.image.load('halma_game/assets/pieces/cp_red.png'),
+    'yellow'            : pygame.image.load('halma_game/assets/pieces/cp_yellow.png')
 }
-cp_selected            =  pygame.image.load(path + '/assets/pieces/cpselected.png')
+cp_selected            =  pygame.image.load('halma_game/assets/pieces/cpselected.png')
 
 
 # Assets enumeration
@@ -179,14 +178,14 @@ cp_enum = list(enumerate(color_picker))
 
 
 # Font definition
-font_time              =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 100)
-font_time_stack        =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 40)
-font_player_name       =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 80)
-font_fps               =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 18)
-font_move_history      =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
-font_piece             =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
-font_score             =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 85)
-font_warning           =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
+font_time              =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 100)
+font_time_stack        =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 40)
+font_player_name       =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 80)
+font_fps               =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 18)
+font_move_history      =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 30)
+font_piece             =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 30)
+font_score             =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 85)
+font_warning           =  pygame.font.Font('halma_game/assets/fonts/coolvetica.ttf', 30)
 
 
 # Team AI initialization
