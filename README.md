@@ -18,6 +18,16 @@ pip install pygame
 Font: Coolvetica (https://www.dafont.com/coolvetica.font)
 
 Inserting custom AI, go to `halma_game/halma_player_XX_A/B.py` with API in function `main`
+```python
+def main(self, model):
+    ## insert code here ##
+    initial_pos = (x0,y0)
+    final pos = [(x1,y1),(x2,y2),...] # x(row), y(column)
+    action = .. # model.A_GESER, model.A_LONCAT, model.A_BERHENTI
+    return final_pos, initial_pos, action
+```
+
+Human interaction with consecutive mouse click button for initial position and final position of board piece.
 
 ## Feature
 - Game configuration screen with board piece animation
@@ -39,7 +49,7 @@ Inserting custom AI, go to `halma_game/halma_player_XX_A/B.py` with API in funct
 
 ## Screenshot
 Dark Mode Starting Screen
-![Starting Light Mode](assets/screenshot/starting_dark.png?raw=True)
+![Starting Dark Mode](halma_game/assets/screenshot/starting_dark.png?raw=True)
 
 Light Mode Playing Screen
-![Playing Dark Mode](assets/screenshot/playing.png?raw=True)
+![Playing Light Mode](halma_game/assets/screenshot/playing.png?raw=True)
