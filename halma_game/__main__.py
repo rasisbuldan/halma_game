@@ -35,7 +35,6 @@ import time
 import math
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/player')
 
 
 # Player AI script import
@@ -55,7 +54,7 @@ from halma_player_human import HalmaPlayerHuman
 # Pygame initialization
 pygame.init()
 screen = pygame.display.set_mode((1280,720))    # Resolution set
-pygame.display.set_caption('Halma (Beta) v0.3.1')
+pygame.display.set_caption('Halma (Beta) v0.3')
 pygame.display.set_icon(pygame.image.load('assets/icon.png'))
 
 
@@ -506,7 +505,7 @@ class gui:
                         if (self.in_region(mouse, (self.x0) + j*self.d, (self.y0) + i*self.d, self.d - 1, self.d - 1) 
                                             and (self.model.getBidak(i,j) // 100 == self.model.getGiliran() + 1)):
                             if click[0] and not self.click_pmove:
-                                #print('[click]',i,j)
+                                # print('[click]',i,j)
                                 self.click_pmove = True
                                 #self.click_human = (i,j)
                                 return (i,j)
@@ -522,7 +521,7 @@ class gui:
                                             and ((i,j) in [m[-2] for m in self.model.get_all_moves(self.model.getGiliran() + 1) if m[0] == self.click_human]
                                             or self.model.getBidak(i,j) // 100 == self.model.getGiliran() + 1)):
                             if click[0] and not self.click_pmove:
-                                #print('[click]',i,j)
+                                # print('[click]',i,j)
                                 self.click_pmove = True
                                 return (i,j)
                             elif not click[0]:
@@ -826,21 +825,21 @@ class gui:
         if self.in_region(mouse,35,120,126,44):
             screen.blit(button['start-active'], dest=(35,120))
             if click[0] == 1:
-                print('[click start]')
+                # print('[click start]')
                 self.action_start()
 
         # Reset button
         if self.in_region(mouse,190,120,126,44):
             screen.blit(button['reset-active'], dest=(190,120))
             if click[0] == 1:
-                print('[click reset]')
+                # print('[click reset]')
                 self.action_reset()
 
         # Pause button
         if self.in_region(mouse,345,120,126,44):
             screen.blit(button['pause-active'], dest=(345,120))
             if click[0] and not self.click_prev:
-                print('[click pause]')
+                # print('[click pause]')
                 self.click_prev = True
                 self.action_pause()
             elif not click[0]:
@@ -891,28 +890,28 @@ class gui:
                 if self.in_region(mouse,110 + 80*i,445,69,50) or self.p1_selected == (i + 1):
                     screen.blit(button_player[bp_enum[(i * 2) + 1][1]], dest=(110 + 80*i,445))
                     if click[0] == 1 and self.in_region(mouse,110 + 80*i,445,69,50) and self.p1_selected != (i + 1):
-                        print('[{}-{} selected as p1]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
+                        # print('[{}-{} selected as p1]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
                         self.p1_selected = i + 1
                 
                 # Row 1 (Human)
                 if self.in_region(mouse,430,445,137,50) or self.p1_selected == 'Human':
                     screen.blit(button_player['Human-active'], dest=(430,445))
                     if click[0] == 1 and self.in_region(mouse,430,445,137,50) and self.p1_selected != 'Human':
-                        print('[Human is selected as p1]')
+                        # print('[Human is selected as p1]')
                         self.p1_selected = 'Human'
 
                 # Row 2
                 if self.in_region(mouse,110 + 80*i,565,69,50) or self.p2_selected == (i + 1):
                     screen.blit(button_player[bp_enum[(i * 2) + 1][1]], dest=(110 + 80*i,565))
                     if click[0] == 1 and self.in_region(mouse,110 + 80*i,565,69,50) and self.p2_selected != (i + 1):
-                        print('[{}-{} selected as p2]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
+                        # print('[{}-{} selected as p2]'.format(self.get_object(i+1)[0].nama, self.get_object(i+1)[1].nama))
                         self.p2_selected = i + 1
 
                 # Row 2 (Human)
                 if self.in_region(mouse,430,565,137,50) or self.p2_selected == 'Human':
                     screen.blit(button_player['Human-active'], dest=(430,565))
                     if click[0] == 1 and self.in_region(mouse,430,565,137,50) and self.p2_selected != 'Human':
-                        print('[Human is selected as p2]')
+                        # print('[Human is selected as p2]')
                         self.p2_selected = 'Human'
 
             # Color picker
@@ -1128,12 +1127,12 @@ class gui:
                 self.finish = True
                 
                 if self.times_up == 1:
-                    print('[P2 Menang!]')
+                    # print('[P2 Menang!]')
                     self.show_winner(self.p2_selected)
                     self.score[1] += 1
                     self.winner = self.p2_selected
                 elif self.times_up == 2:
-                    print('[P1 Menang!]')
+                    # print('[P1 Menang!]')
                     self.show_winner(self.p1_selected)
                     self.score[0] += 1
                     self.winner = self.p1_selected
@@ -1144,12 +1143,12 @@ class gui:
                         if self.model.dalamTujuan(0,piece[0],piece[1]):
                             k += 1
                     if k == 15:
-                        print('[P1 Menang!]')
+                        # print('[P1 Menang!]')
                         self.show_winner(self.p1_selected)
                         self.score[0] += 1
                         self.winner = self.p1_selected
                     else:
-                        print('[P2 Menang!]')
+                        # print('[P2 Menang!]')
                         self.show_winner(self.p2_selected)
                         self.score[1] += 1
                         self.winner = self.p2_selected
@@ -1184,12 +1183,12 @@ class gui:
 
                 # If pieces count in player 1 and 3 is full
                 if k == 20:
-                    print('[P1 Menang!]')
+                    # print('[P1 Menang!]')
                     self.show_winner(self.p1_selected)
                     self.score[0] += 1
                     self.winner = self.p1_selected
                 else:
-                    print('[P2 Menang!]')
+                    # print('[P2 Menang!]')
                     self.show_winner(self.p2_selected)
                     self.score[1] += 1
                     self.winner = self.p2_selected
@@ -1251,14 +1250,14 @@ class gui:
 
             # Run move action
             if action == self.model.A_LONCAT:
-                print('[action: loncat] {} {} {}'.format(initial_pos, final_pos, action))
+                # print('[action: loncat] {} {} {}'.format(initial_pos, final_pos, action))
                 for xy in final_pos:
                     modelState = self.model.mainLoncat(initial_pos[0], initial_pos[1], xy[0], xy[1])
                     initial_pos = xy
                     time.sleep(0.08)
                     self.update_screen()
             elif action == self.model.A_GESER:
-                print('[action: geser] {} {} {}'.format(initial_pos, final_pos, action))
+                # print('[action: geser] {} {} {}'.format(initial_pos, final_pos, action))
                 modelState = self.model.mainGeser(initial_pos[0], initial_pos[1], final_pos[0][0], final_pos[0][1])
             
             # Update screen frame on current state

@@ -243,7 +243,7 @@ class HalmaModel:
     # return True jika pemain lama masih punya jatah waktu
     def ganti(self, selesai):
         self.__waktu[self.__giliran] += self.JATAH_WAKTU - (selesai - self.__mulai)
-        print('time stack: ', self.__waktu[self.__giliran])
+        # print('time stack: ', self.__waktu[self.__giliran])
         if self.__waktu[self.__giliran] < 0:
             return self.S_TIMEOUT
         self.__giliran = (self.__giliran + 1) % self.__npemain
@@ -395,7 +395,7 @@ class HalmaModel:
             for move in moves_geser[piece_geser][1]:
                 moves.append([moves_geser[piece_geser][0]] + [move] + ['0'])
         
-        #print('get_all_moves',moves)
+        # print('get_all_moves',moves)
         return moves
 
 
@@ -407,7 +407,7 @@ class HalmaModel:
         def is_board_piece(pos):
             return (self.__papan[pos[0]][pos[1]] != 0)
 
-        print('Calculating path from {} to {}...'.format(initial, final))
+        # print('Calculating path from {} to {}...'.format(initial, final))
 
         # Initial and final node
         initial_node = Node(None, initial)

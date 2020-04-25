@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Gen 3 - Group
+Gen 3 - Team 04
 
 Recursive minimax with alpha-beta pruning
 Evaluation (weighted):
@@ -12,8 +12,6 @@ Evaluation (weighted):
     - Potential delta
 
 To do:
-    - get all loncat and geser with id
-    - move dir for 4 player
     - add move history constraint
     - mid lane control
     - a* search piece-blockade error
@@ -37,15 +35,15 @@ class HalmaStateNode:
         self.current = [row[:] for row in current]      # 2-D array deepcopy
         self.move = move
         self.turn = turn
-        #print(move)
+        # print(move)
 
         # Run move [(x0,y0),(x1,y1),1]
-        #print(*self.current, sep='\n')
-        #print('move: ', move)
+        # print(*self.current, sep='\n')
+        # print('move: ', move)
         if move != None:
             self.current[move[-2][0]][move[-2][1]] = self.current[move[0][0]][move[0][1]]
             self.current[move[0][0]][move[0][1]] = 0
-        #print(*self.current, sep='\n')
+        # print(*self.current, sep='\n')
 
     # ---- Selector ----
     def get_move(self):
@@ -70,7 +68,7 @@ class HalmaStateNode:
         return self.current[pos[0]][pos[1]] == 0
 
     def is_board_piece(self, pos):
-        #print('[is_board_piece]',self.get_turn(),'->',pos,'->',self.current[pos[0]][pos[1]] // 100)
+        # print('[is_board_piece]',self.get_turn(),'->',pos,'->',self.current[pos[0]][pos[1]] // 100)
         return self.current[pos[0]][pos[1]] // 100
     
     # Return initial,final
@@ -249,7 +247,7 @@ class HalmaStateNode:
                     max_hop = [moves_hop[piece_hop][0]] + move
                     max_hop_val = val
         
-        #print('~~ [max hop]',player_id,'->',max_hop)
+        # print('~~ [max hop]',player_id,'->',max_hop)
         return max_hop
 
     
@@ -341,9 +339,9 @@ class HalmaStateNode:
                     dist_val += self.calc_dist_normalized(piece, *self.get_dist_reference(turn_id))
                 
                 # Pieces total distance to target zone
-                eval_value += (weight['dist-target'] * (dist_val / 15))
+                eval_value += (weight['dist-target'] * (dist_val / 10))
                 # Pieces count in target zone
-                eval_value += (weight['count-target'] * (self.count_in_target(turn_id) / 15))
+                eval_value += (weight['count-target'] * (self.count_in_target(turn_id) / 10))
                 
                 # Pieces count in base zone
                 #eval_value -= (weight['count-base'] * (self.count_in_base(turn_id) / 10))
@@ -356,7 +354,7 @@ class HalmaStateNode:
                 #eval_value += (weight['count-loncat'] * self.get_loncat_count(turn_id) / 50)
         
         # Save evaluation value to val attribute
-        #print('~~ [eval_value]',self.move,'->',eval_value)
+        # print('~~ [eval_value]',self.move,'->',eval_value)
         self.val = eval_value
 
     
@@ -387,7 +385,7 @@ class Node():
 
 
 
-class HalmaPlayer04A(HalmaPlayer):
+class HalmaPlayer04B(HalmaPlayer):
     # Class Attributes
     last_move = [] # Move history (limited to n-move)
     ply = 1
@@ -409,7 +407,7 @@ class HalmaPlayer04A(HalmaPlayer):
         def is_board_piece(pos):
             return (board[pos[0]][pos[1]] != 0)
 
-        print('Calculating path...')
+        # print('Calculating path...')
 
         # Initial and final node
         initial_node = Node(None, initial)
@@ -432,7 +430,7 @@ class HalmaPlayer04A(HalmaPlayer):
                 if node.f < current_node.f:
                     current_node = node
                     current_id = index
-            #print('visiting ',current_node.pos)
+            # print('visiting ',current_node.pos)
 
             # Add visited current node to visited list
             visit.pop(current_id)
@@ -440,7 +438,7 @@ class HalmaPlayer04A(HalmaPlayer):
 
             # If current node is final target
             if current_node.equal(final_node):
-                #print('[final node]')
+                # print('[final node]')
                 path = []
                 current = current_node
                 
@@ -511,7 +509,7 @@ class HalmaPlayer04A(HalmaPlayer):
                     continue
                 
                 # Add child to visit list
-                #print('appending ',child.pos)
+                # print('appending ',child.pos)
                 visit.append(child)
 
 
@@ -519,7 +517,7 @@ class HalmaPlayer04A(HalmaPlayer):
         # Termination (ply reached, game finished, or time limit)
         if depth == self.ply or node.game_finished() or (time.process_time() - self.time_start) > self.time_limit:
             node.calc_evaluation(weight)
-            #print('~~ [node move]',node.get_move(),' ==> ',node.get_val())
+            # print('~~ [node move]',node.get_move(),' ==> ',node.get_val())
             return node
         
         # Our turn (depth 2n - 1)
@@ -543,7 +541,7 @@ class HalmaPlayer04A(HalmaPlayer):
                 
                 # Pruning
                 if beta <= alpha:
-                    #print('prune!')
+                    # print('prune!')
                     break
             
             return max_node
@@ -569,7 +567,7 @@ class HalmaPlayer04A(HalmaPlayer):
                 
                 # Pruning
                 if beta <= alpha:
-                    #print('prune!')
+                    # print('prune!')
                     break
 
             return min_node
@@ -584,7 +582,7 @@ class HalmaPlayer04A(HalmaPlayer):
         # AI parameter
         self.ply = 2
         self.time_limit = 3
-        self.late_treshold = 14
+        self.late_treshold = 9
         weight = {
             'dist-target': 0.5,
             'count-target': 0.3,
@@ -607,16 +605,16 @@ class HalmaPlayer04A(HalmaPlayer):
 
         if not root_node.game_finished():
             # Late game
-            if root_node.count_in_target(self.nomor) >= self.late_treshold:
+            if root_node.count_in_target(self.nomor) >= 9:
 
-                #print('!! [late game]', self.nomor)
-                #print(*root_node.get_current(), sep='\n')
+                # print('!! [late game]', self.nomor)
+                # print(*root_node.get_current(), sep='\n')
                 initial = root_node.get_lost_piece(self.nomor)[0]
                 target = root_node.get_empty_target(self.nomor)[0]
                 board = root_node.get_current()
 
                 final = self.calc_path(board, initial, target)
-                print(final)
+                # print(final)
 
                 if (abs(final[1][0] - initial[0]) ** 2 + abs(final[1][1] - initial[1]) ** 2) > 2:
                     return [final[1]], initial, 1
@@ -629,15 +627,15 @@ class HalmaPlayer04A(HalmaPlayer):
                 # Binary tree exploration
                 node_choice = self.minimax_node(self.nomor, root_node, 0, alpha, beta, weight, True)
                 val = node_choice.get_val()
-                #print('!! [node choice]',node_choice.get_move(),'->',node_choice.get_val())
+                # print('!! [node choice]',node_choice.get_move(),'->',node_choice.get_val())
 
                 # Backtrace to selected first child node of root_node
                 while node_choice.get_parent().get_parent() != None:
-                    #print('!! [node parent]',node_choice.get_parent().get_move())
+                    # print('!! [node parent]',node_choice.get_parent().get_move())
                     node_choice = node_choice.get_parent()
                 
                 # Extract move information
-                print('!! [final node choice]',node_choice.get_move(),'->',val)
+                # print('!! [final node choice]',node_choice.get_move(),'->',val)
                 move_choice = node_choice.get_move()
             
                 initial = move_choice[0]
@@ -652,10 +650,10 @@ class HalmaPlayer04A(HalmaPlayer):
                     final = move_choice[1:-1]
                     action = model.A_LONCAT
                 
-                print('!! [return]',final,',',initial,',',action)
+                # print('!! [return]',final,',',initial,',',action)
                 return final, initial, action
         
         # Game finished
         else:
-            print('!! [return] no move')
+            # print('!! [return] no move')
             return None,None,model.A_BERHENTI
