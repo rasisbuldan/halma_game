@@ -1,8 +1,13 @@
 # Halma Game
 
+Install from pip
+```
+pip install halma-game
+```
+
 To run simply just execute in terminal/cmd:
 ```
-python halma_gui.py
+python -m halma-game
 ```
 
 Prerequisite: pygame library
