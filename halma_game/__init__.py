@@ -1,0 +1,12 @@
+# Player AI script import
+from halma_game.halma_model import HalmaModel
+from halma_game.halma_player import HalmaPlayer
+from halma_game.halma_player_01_A import HalmaPlayer01A
+from halma_game.halma_player_01_B import HalmaPlayer01B
+from halma_game.halma_player_02_A import HalmaPlayer02A
+from halma_game.halma_player_02_B import HalmaPlayer02B
+from halma_game.halma_player_03_A import HalmaPlayer03A
+from halma_game.halma_player_03_B import HalmaPlayer03B
+from halma_game.halma_player_04_A import HalmaPlayer04A
+from halma_game.halma_player_04_B import HalmaPlayer04B
+from halma_game.halma_player_human import HalmaPlayerHuman

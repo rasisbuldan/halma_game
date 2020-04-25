@@ -5,8 +5,8 @@ Modified by Group 04
 
 import random
 import time
-from halma_player import HalmaPlayer
-from halma_model import HalmaModel
+from halma_game.halma_player import HalmaPlayer
+from halma_game.halma_model import HalmaModel
 
 
 class HalmaPlayer03A(HalmaPlayer):

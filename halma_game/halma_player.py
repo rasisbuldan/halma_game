@@ -7,7 +7,7 @@ Created on Sun Feb 23 08:04:48 2020
 
 import random
 import time
-from halma_model import HalmaModel
+from halma_game.halma_model import HalmaModel
 
 class HalmaPlayer:
     nama = 'Pemain'
