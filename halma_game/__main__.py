@@ -77,10 +77,10 @@ colors_enum = list(enumerate(colors))
 # Assets Import
 path = os.path.dirname(__file__)
 print(path)
-pygame.display.set_icon(pygame.image.load(path + '/assets/icon.png'))
+pygame.display.set_icon(pygame.image.load(path + '/assets/gui/icon.png'))
 title = {
-    'light'             : pygame.image.load(path + '/assets/title.png'),
-    'dark'              : pygame.image.load(path + '/assets/title_dark.png')
+    'light'             : pygame.image.load(path + '/assets/gui/title.png'),
+    'dark'              : pygame.image.load(path + '/assets/gui/title_dark.png')
 }
 info_text = {
     'turn'              : pygame.image.load(path + '/assets/info/info_turn.png'),
@@ -179,14 +179,14 @@ cp_enum = list(enumerate(color_picker))
 
 
 # Font definition
-font_time              =  pygame.font.Font('assets/fonts/coolvetica.ttf', 100)
-font_time_stack        =  pygame.font.Font('assets/fonts/coolvetica.ttf', 40)
-font_player_name       =  pygame.font.Font('assets/fonts/coolvetica.ttf', 80)
-font_fps               =  pygame.font.Font('assets/fonts/coolvetica.ttf', 18)
-font_move_history      =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
-font_piece             =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
-font_score             =  pygame.font.Font('assets/fonts/coolvetica.ttf', 85)
-font_warning           =  pygame.font.Font('assets/fonts/coolvetica.ttf', 30)
+font_time              =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 100)
+font_time_stack        =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 40)
+font_player_name       =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 80)
+font_fps               =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 18)
+font_move_history      =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
+font_piece             =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
+font_score             =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 85)
+font_warning           =  pygame.font.Font(path + '/assets/fonts/coolvetica.ttf', 30)
 
 
 # Team AI initialization
