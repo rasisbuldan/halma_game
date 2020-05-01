@@ -37,14 +37,14 @@ import sys
 
 from halma_game.halma_model import HalmaModel
 from halma_game.halma_player import HalmaPlayer
-from halma_game.halma_player_01_A import HalmaPlayer01A
-from halma_game.halma_player_01_B import HalmaPlayer01B
-from halma_game.halma_player_02_A import HalmaPlayer02A
-from halma_game.halma_player_02_B import HalmaPlayer02B
-from halma_game.halma_player_03_A import HalmaPlayer03A
-from halma_game.halma_player_03_B import HalmaPlayer03B
-from halma_game.halma_player_04_A import HalmaPlayer04A
-from halma_game.halma_player_04_B import HalmaPlayer04B
+from halma_game.AI.halma_player_01_A import HalmaPlayer01A
+from halma_game.AI.halma_player_01_B import HalmaPlayer01B
+from halma_game.AI.halma_player_02_A import HalmaPlayer02A
+from halma_game.AI.halma_player_02_B import HalmaPlayer02B
+from halma_game.AI.halma_player_03_A import HalmaPlayer03A
+from halma_game.AI.halma_player_03_B import HalmaPlayer03B
+from halma_game.AI.halma_player_04_A import HalmaPlayer04A
+from halma_game.AI.halma_player_04_B import HalmaPlayer04B
 from halma_game.halma_player_human import HalmaPlayerHuman
 
 
@@ -242,6 +242,7 @@ class gui:
     color_click = [0,False,False]
     color_picked = [0,0,0,0,0]
     times_up = False
+    round_count = 0
 
 
     # Initialization
@@ -822,9 +823,13 @@ class gui:
         # Start button
         if self.in_region(mouse,35,120,126,44):
             screen.blit(button['start-active'], dest=(35,120))
-            if click[0] == 1:
-                # print('[click start]')
+            # print('[click start]')
+            if click[0] and not self.click_prev:
+                # print('[click pause]')
+                self.click_prev = True
                 self.action_start()
+            elif not click[0]:
+                self.click_prev = False
 
         # Reset button
         if self.in_region(mouse,190,120,126,44):
@@ -966,7 +971,8 @@ class gui:
         '''
 
         # Frame and loop timing
-        self.clock.tick_busy_loop(60)   # Framerate cap
+        if not self.finish:
+            self.clock.tick_busy_loop(60)   # Framerate cap
 
         # Check event
         self.check_event()
@@ -990,10 +996,11 @@ class gui:
             self.load_pieces(self.model.getPapan())
             self.update_player()
             self.update_score()
-            self.update_timer()
-            self.update_timer_stack()
-            self.update_move_count()
             self.update_history()
+            if not self.finish:
+                self.update_timer()
+                self.update_timer_stack()
+                self.update_move_count()
         
         # Round finished only
         if self.finish or self.times_up:
@@ -1042,6 +1049,9 @@ class gui:
         # Pause button clicked
         while self.click_pause:
             self.update_screen()
+            print('pausing')
+            if not self.click_pause:
+                print('exit pause')
 
         # Reset button clicked (Pretty useless?)
         if self.click_reset:
@@ -1156,11 +1166,33 @@ class gui:
                 self.click_start = False
                 while not self.click_start:
                     self.update_screen()
+                
 
                 # Reinitialize halma model (next round)
                 modelState = self.model.S_OK
+
+                # Flip player
+                p_buf = self.p2_selected
+                self.p1_selected = self.p2_selected
+                self.p2_selected = p_buf
+                if self.round_count % 2 == 0:
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+                    
+                    # Flip color picked
+                    cp_previous = [cp for cp in self.color_picked]
+                    for i in range(1,5):
+                        self.color_picked[i] = cp_previous[1 + (i % 4)]
+                
+                else:
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+
+                    # Flip color picked
+                    cp_previous = [cp for cp in self.color_picked]
+                    for i in range(1,5):
+                        self.color_picked[i] = cp_previous[1 + ((i - 2) % 4)]
                 self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
                 self.starting = True
+                self.finish = False
                 self.main()
 
         # 4-Player
@@ -1183,23 +1215,45 @@ class gui:
                 if k == 20:
                     # print('[P1 Menang!]')
                     self.show_winner(self.p1_selected)
-                    self.score[0] += 1
+                    self.score[0 + (self.round_count % 2)] += 1
                     self.winner = self.p1_selected
                 else:
                     # print('[P2 Menang!]')
                     self.show_winner(self.p2_selected)
-                    self.score[1] += 1
+                    self.score[1 - (self.round_count % 2)] += 1
                     self.winner = self.p2_selected
                 
-                self.update_screen()
-
-                # Sleep for 20s
-                time.sleep(20)
+                # Waiting for start click to continue to next round
+                while not self.click_start:
+                    self.update_screen()
 
                 # Reinitialize halma model (next round)
                 modelState = self.model.S_OK
-                self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+
+                # Flip player
+                p_buf = self.p2_selected
+                self.p1_selected = self.p2_selected
+                self.p2_selected = p_buf
+                if self.round_count % 2 == 0:
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+                    
+                    # Flip color picked
+                    cp_previous = [cp for cp in self.color_picked]
+                    for i in range(1,5):
+                        self.color_picked[i] = cp_previous[1 + (i % 4)]
+                
+                else:
+                    self.reinit_model(self.get_object(self.p1_selected), self.get_object(self.p2_selected))
+
+                    # Flip color picked
+                    cp_previous = [cp for cp in self.color_picked]
+                    for i in range(1,5):
+                        self.color_picked[i] = cp_previous[1 + ((i - 2) % 4)]
+
                 self.starting = True
+                self.times_up = False
+                self.finish = False
+                self.round_count += 1
                 self.main()
 
 
