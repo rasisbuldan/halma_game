@@ -749,6 +749,7 @@ class gui:
 
         for i in range(0,len(move_hist)):
             name = self.model.getPemain(move_hist[i][0]).nama
+            nomor = self.model.getPemain(move_hist[i][0]).nomor
             if move_hist[i][3] == self.model.A_GESER:
                 move_type = 'GESER'
             elif move_hist[i][3] == self.model.A_LONCAT:
@@ -757,7 +758,7 @@ class gui:
                 move_type = 'BERHENTI'
 
             # Player 1 move
-            screen.blit(font_move_history.render('{} | {} {} -> {} ({:.2f}s)'.format(name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,
+            screen.blit(font_move_history.render('{} {} | {} {} -> {} ({:.2f}s)'.format(nomor, name, move_type, move_hist[i][1], move_hist[i][2], move_hist[i][4]),1,
                                 (self.get_color(self.color_picked[move_hist[i][0] + 1] + 6))), dest=(35, 510 + i*40))
 
 
@@ -888,7 +889,7 @@ class gui:
                     time.sleep(0.2)
             
             # AI picker
-            for i in range(1,4):
+            for i in range(0,4):
                 # Row 1 (AI)
                 if self.in_region(mouse,110 + 80*i,445,69,50) or self.p1_selected == (i + 1):
                     screen.blit(button_player[bp_enum[(i * 2) + 1][1]], dest=(110 + 80*i,445))
@@ -1231,7 +1232,7 @@ class gui:
                 modelState = self.model.S_OK
 
                 # Flip player
-                p_buf = self.p2_selected
+                p_buf = self.p1_selected
                 self.p1_selected = self.p2_selected
                 self.p2_selected = p_buf
                 if self.round_count % 2 == 0:

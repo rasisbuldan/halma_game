@@ -1,21 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Gen 3 - Team 04
-
-Recursive minimax with alpha-beta pruning
-Evaluation (weighted):
-    - [A/B] Distance to endpoint of target zone (0,0), (9,9), (0,9), (9,0)
-    - [A/B] Middle lane
-    - [A/B] Hop possibilities count for ally
-    - [A/B] Furthest hop available
-
-To do:
-    - Add move history constraint
-    - Mid lane control
-    - A* search piece-blockade error
-
-Known issues:
-    - Error path not found
+Dimas Apeco Putra - 13316015
+Rasis Syauqi Buldan - 13316043
+Thoriq Fauzan Ariandi - 13316063
 """
 
 import random
@@ -128,30 +116,6 @@ class HalmaStateNode:
                 k += 1
         
         return k
-    
-
-    def get_empty_target(self, player_id):
-        ''' Get empty target zone for player_id turn '''
-        pieces = self.get_board_pieces(player_id)
-        empty_target = []
-
-        for i in range (0,10):
-            for j in range(0,10):
-                if self.in_target_zone((i,j),player_id) and (self.is_empty((i,j)) or self.is_board_piece((i,j)) != player_id):
-                    empty_target.append((i,j))
-        
-        return empty_target
-
-    def get_lost_piece(self, player_id):
-        ''' Get lost piece (board pieces outside target zone) for player_id turn '''
-        pieces = self.get_board_pieces(player_id)
-        lost_piece = []
-
-        for piece in pieces:
-            if not self.in_target_zone(piece, player_id):
-                lost_piece.append(piece)
-        
-        return lost_piece
 
     
     def game_finished(self):
@@ -237,26 +201,6 @@ class HalmaStateNode:
         
         return loncat_all
 
-
-    def get_furthest_loncat(self, player_id):
-        ''' Get furthest loncat of player_id turn '''
-        max_hop_val = 0
-        max_hop = []
-
-        initial, target = self.get_dist_reference(player_id)
-
-        moves_hop = self.get_all_loncat(player_id)
-        for piece_hop in range(len(moves_hop)):
-            for move in moves_hop[piece_hop][1]:
-                val = self.calc_dist_normalized(move[-1],initial,target)
-                
-                if val > max_hop_val:
-                    max_hop = [moves_hop[piece_hop][0]] + move
-                    max_hop_val = val
-        
-        # print('~~ [max hop]',player_id,'->',max_hop)
-        return max_hop
-
     
     def get_loncat_count(self, player_id):
         ''' Get hop count of player_id board piece '''
@@ -312,12 +256,6 @@ class HalmaStateNode:
         
         return moves
 
-
-    def calc_chebyshev(self, initial, final):
-        ''' Calculate chebyshev distance (omnidirectional) from initial to final (tuple) '''
-        return max(abs(final[0] - initial[0]), abs(final[1] - initial[1]))
-
-
     
     def calc_dist(self, initial, final):
         ''' Calculate euclidean distance (without square root) '''
@@ -335,15 +273,20 @@ class HalmaStateNode:
         '''
         Calculate evaluation function for current node
         To do : include opponent negative evaluation function
-
         '''
-        root_id = 1 + (self.turn % 4)
+        
+        # Tree call to find root turn
+        par = self.parent
+        while par.parent != None:
+            par = par.parent
+        root_id = par.turn
         eval_value = 0
 
         for i in range(0,4):
-            turn_id = 1 + ((self.turn + i) % 4)
+            turn_id = 1 + ((root_id + i - 1) % 4)
             pieces = self.get_board_pieces(turn_id)
             
+            # For ourself and ally ()
             if i % 2 == 0:
                 dist_val = 0
                 for piece in pieces:
@@ -351,48 +294,12 @@ class HalmaStateNode:
                 
                 # Pieces total distance to target zone
                 eval_value += (weight['dist-target'] * (dist_val / 10))
+                
                 # Pieces count in target zone
                 eval_value += (weight['count-target'] * (self.count_in_target(turn_id) / 10))
-                
-                # Pieces count in base zone
-                #eval_value -= (weight['count-base'] * (self.count_in_base(turn_id) / 10))
-
-                # Furthest hop distance to target zone
-                #eval_value += (weight['furthest-loncat'] * self.calc_dist_normalized(self.get_furthest_loncat(turn_id)[-1], 
-                                                                #*self.get_dist_reference(turn_id)))\
-                
-                # Hop count
-                #eval_value += (weight['count-loncat'] * self.get_loncat_count(turn_id) / 50)
         
         # Save evaluation value to val attribute
-        # print('~~ [eval_value]',self.move,'->',eval_value)
         self.val = eval_value
-
-    
-class Node():
-    parent = 0
-    pos = 0
-
-    # Node definition
-    def __init__(self, parent=None, pos=None):
-        self.parent = parent
-        self.pos = pos
-
-        # Heuristic value
-        self.f = 0
-        self.g = 0
-        self.h = 0
-    
-    def set_heur(self, f, g, h):
-        ''' Set heuristic value for node '''
-        # f = g + h
-        self.f = f
-        self.g = g
-        self.h = h
-
-    def equal(self, other):
-        ''' Check node position equality (boolean) '''
-        return self.pos == other.pos
 
 
 
@@ -409,114 +316,6 @@ class HalmaPlayer04B(HalmaPlayer):
         self.turn_count = 0
 
 
-    def calc_path(self, board, initial, final):
-        ''' (Special case - late game) Calculate path using A* search'''
-        def is_valid(pos):
-            return (0 <= pos[0] < 10 and 0 <= pos[1] < 10)
-
-        def is_board_piece(pos):
-            return (board[pos[0]][pos[1]] != 0)
-
-        # Initial and final node
-        initial_node = Node(None, initial)
-        initial_node.set_heur(0,0,0)
-        final_node = Node(None, final)
-        final_node.set_heur(0,0,0)
-
-        # List initialization (visit: to be visited)
-        visit = []
-        visit.append(initial_node)
-        visited = []
-
-        # Search loop (while there is node to be visited)
-        while len(visit) > 0:
-
-            # Select node with minimal f value of visit list
-            current_node = visit[0]
-            current_id = 0
-            for index, node in enumerate(visit):
-                if node.f < current_node.f:
-                    current_node = node
-                    current_id = index
-
-            # Add visited current node to visited list
-            visit.pop(current_id)
-            visited.append(current_node)
-
-            # If current node is final target
-            if current_node.equal(final_node):
-                path = []
-                current = current_node
-                
-                # Backtracing parent position of node to initial position
-                while current is not None:
-                    path.append(current.pos)
-                    current = current.parent
-                
-                # Return reversed path (from initial to final)
-                return path[::-1]
-            
-            # Generate node children
-            children = []
-            move_possibilities = [(0,-1),(0,1),(-1,0),(1,0),(-1,-1),(-1,1),(1,-1),(1,1)]
-            for move in move_possibilities:
-                
-                # Get next node position
-                node_next_pos = (current_node.pos[0] + move[0], current_node.pos[1] + move[1])
-
-                # Node position out of board index
-                if not is_valid(node_next_pos):
-                    continue
-                
-                # Next node position is board piece
-                if is_board_piece(node_next_pos):
-                    next2 = (node_next_pos[0] + move[0], node_next_pos[1] + move[1])
-
-                    # Check if hop target is valid index for board
-                    if is_valid(next2):
-
-                        # Hop
-                        if board[next2[0]][next2[1]] == 0:
-                            node_next_pos = next2
-                    
-                        else:
-                            continue
-                    
-                    else:
-                        continue
-                    
-                # Create new node
-                new_node = Node(current_node, node_next_pos)
-                children.append(new_node)
-
-            # Loop through node parent's children
-            for child in children:
-
-                # Child already on visited
-                already = False
-                for v in visited:
-                    if child.equal(v):
-                        already = True
-                if already:
-                    continue
-                
-                # Calculate A* parameter values (f,g,h)
-                g = current_node.g + 1
-                h = ((child.pos[0] - final_node.pos[0]) ** 2) + ((child.pos[1] - final_node.pos[1]) ** 2)
-                child.set_heur(g + h, g, h)
-
-                # Child already on visit
-                already = False
-                for v in visit:
-                    if child.equal(v) and child.g > v.g:
-                        already = True
-                if already:
-                    continue
-                
-                # Add child to visit list
-                visit.append(child)
-
-
     def minimax_node(self, turn, node, depth, alpha, beta, weight, maximizingPlayer):
         '''
         Recursive minimax game tree exploration
@@ -524,7 +323,6 @@ class HalmaPlayer04B(HalmaPlayer):
         # Termination (ply reached, game finished, or time limit)
         if depth == self.ply or node.game_finished() or (time.process_time() - self.time_start) > self.time_limit:
             node.calc_evaluation(weight)
-            # print('~~ [node move]',node.get_move(),' ==> ',node.get_val())
             return node
         
         # Our turn (depth 2n - 1)
@@ -594,14 +392,11 @@ class HalmaPlayer04B(HalmaPlayer):
 
         # AI parameter
         self.ply = 2
-        self.time_limit = 3
+        self.time_limit = 4
         self.late_treshold = 9
         weight = {
-            'dist-target': 0.5,
-            'count-target': 0.3,
-            'count-base': 0.15,
-            'count-loncat': 0.05,
-            'furthest-loncat': 0.2
+            'dist-target': 0.6,
+            'count-target': 0.4,
         }
 
         # Algorithm parameter
@@ -617,61 +412,42 @@ class HalmaPlayer04B(HalmaPlayer):
         # Root node
         root_node = HalmaStateNode(self.nomor, None, board, None)
 
+        # If game is not finished
         if not root_node.game_finished():
-            # Late game
-            if root_node.count_in_target(self.nomor) >= 9:
-                board = root_node.get_current()
-                initial = root_node.get_lost_piece(self.nomor)[0]
-                target = root_node.get_empty_target(self.nomor)[0]
-                
-                if board[target[0]][target[1]] != 0:
-                    return 0, 0, model.A_BERHENTI
+            # Late game constraint
+            if root_node.count_in_target(self.nomor) >= self.late_treshold:
+                weight = {
+                    'dist-target': 0.2,
+                    'count-target': 0.8,
+                }
+                self.ply = 8
 
-                # Calculate A* path
-                final = self.calc_path(board, initial, target)
-                # print('[path]',final)
+            # Binary tree exploration
+            node_choice = self.minimax_node(self.nomor, root_node, 0, alpha, beta, weight, True)
+            val = node_choice.get_val()
 
-                # Loncat
-                if (abs(final[1][0] - initial[0]) ** 2 + abs(final[1][1] - initial[1]) ** 2) > 2:
-                    return [final[1]], initial, 1
-                
-                # Geser
-                else:
-                    return [final[1]], initial, 0
-
-
-            # Early-mid game
-            else:
-                # Binary tree exploration
-                node_choice = self.minimax_node(self.nomor, root_node, 0, alpha, beta, weight, True)
-                val = node_choice.get_val()
-                # print('!! [node choice]',node_choice.get_move(),'->',node_choice.get_val())
-
-                # Backtrace to selected first child node of root_node
-                while node_choice.get_parent().get_parent() != None:
-                    node_choice = node_choice.get_parent()
-                
-                # Extract move information
-                # print('!! [final node choice]',node_choice.get_move(),'->',val)
-                move_choice = node_choice.get_move()
+            # Backtrace to selected first child node of root_node
+            while node_choice.get_parent().get_parent() != None:
+                node_choice = node_choice.get_parent()
             
-                initial = move_choice[0]
-                act_num = int(move_choice[-1])
+            # Extract move information
+            move_choice = node_choice.get_move()
+        
+            initial = move_choice[0]
+            act_num = int(move_choice[-1])
 
-                # Geser
-                if act_num == 0:
-                    final = [move_choice[1]]
-                    action = model.A_GESER
-                # Loncat
-                elif act_num == 1:
-                    final = move_choice[1:-1]
-                    action = model.A_LONCAT
-                
-                # print('!! [return]',final,',',initial,',',action)
-                return final, initial, action
+            # Geser
+            if act_num == 0:
+                final = [move_choice[1]]
+                action = model.A_GESER
+            # Loncat
+            elif act_num == 1:
+                final = move_choice[1:-1]
+                action = model.A_LONCAT
+            
+            return final, initial, action
         
 
-        # Game finished
+        # Game finished (no move)
         else:
-            # print('!! [return] no move')
             return None,None,model.A_BERHENTI
