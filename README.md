@@ -1,4 +1,6 @@
 # Halma Game
+Halma Game GUI using PyGame, can be played by human (2-4P) or AI
+![Playing Light Mode](halma_game/assets/screenshot/playing.png?raw=True)
 Clone this repository
 ```
 git clone https://github.com/rasisbuldan/halma_game
@@ -48,8 +50,8 @@ Human interaction with consecutive mouse click button for initial position and f
 - PyPI package
 
 ## Screenshot
-Dark Mode Starting Screen
-![Starting Dark Mode](halma_game/assets/screenshot/starting_dark.png?raw=True)
+Dark Mode Playing Screen
+![Starting Dark Mode](halma_game/assets/screenshot/playing_dark.png?raw=True)
 
 Light Mode Playing Screen
 ![Playing Light Mode](halma_game/assets/screenshot/playing.png?raw=True)
